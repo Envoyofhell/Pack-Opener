@@ -47,7 +47,15 @@ function renderCollection() {
 /* ---------------- LOAD SET ---------------- */
 fetch("sets/Z-Genesis_Melemele.json")
   .then(res => res.json())
-  .then(json => cards = json.data);
+  .then(json => {
+    cards = json.data;
+
+    // Enable the Open Pack button now that JSON has loaded
+    document.getElementById("openPack").disabled = false;
+
+    // Hide loading text
+    document.getElementById("loading").style.display = "none";
+  });
 
 /* ---------------- HELPERS ---------------- */
 function randomFrom(array) {
@@ -70,6 +78,11 @@ function weightedRoll(table) {
 
 /* ---------------- OPEN PACK ---------------- */
 function openPack() {
+  if (!cards.length) {
+    alert("Set not loaded yet. Please wait a moment.");
+    return;
+  }
+
   const pack = document.getElementById("pack");
   pack.innerHTML = "";
 
