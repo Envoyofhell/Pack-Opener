@@ -50,8 +50,7 @@ function renderCollection() {
 
 fetch("sets/Z-Genesis_Melemele.json")
   .then(res => res.json())
-  .then(json => cards = json.data)
-  .catch(err => console.error("Failed to load JSON:", err));
+  .then(json => cards = json.data);
 
 /* ---------------- HELPERS ---------------- */
 
@@ -76,26 +75,20 @@ function weightedRoll(table) {
 /* ---------------- OPEN PACK ---------------- */
 
 function openPack() {
-  if (!cards || cards.length === 0) {
-    alert("Cards not loaded yet. Please wait a moment and try again.");
-    return;
-  }
-
   const pack = document.getElementById("pack");
   pack.innerHTML = "";
 
   const pulls = [];
 
-  // ----- Slots 1–7 -----
+  // Slots 1–7
   for (let i = 0; i < 7; i++) {
-    const rarity = weightedRoll([
+    pulls.push(randomFrom(getByRarity(weightedRoll([
       { rarity: "Common", weight: 4 },
       { rarity: "Uncommon", weight: 3 }
-    ]);
-    pulls.push(randomFrom(getByRarity(rarity)));
+    ]))));
   }
 
-  // ----- Slot 8 -----
+  // Slot 8
   pulls.push(randomFrom(getByRarity(weightedRoll([
     { rarity: "Common", weight: 33 },
     { rarity: "Uncommon", weight: 133 },
@@ -104,7 +97,7 @@ function openPack() {
     { rarity: "Hyper Rare", weight: 1 }
   ]))));
 
-  // ----- Slot 9 -----
+  // Slot 9
   pulls.push(randomFrom(getByRarity(weightedRoll([
     { rarity: "Common", weight: 85 },
     { rarity: "Uncommon", weight: 232 },
@@ -113,7 +106,7 @@ function openPack() {
     { rarity: "Hyper Rare", weight: 2.2 }
   ]))));
 
-  // ----- Slot 10 -----
+  // Slot 10
   pulls.push(randomFrom(getByRarity(weightedRoll([
     { rarity: "Rare", weight: 11 },
     { rarity: "Double Rare", weight: 3 },
@@ -123,7 +116,8 @@ function openPack() {
   /* ---- STATS (ONCE) ---- */
   stats.packsOpened++;
   pulls.forEach(card => {
-    stats.rarities[card.rarity] = (stats.rarities[card.rarity] || 0) + 1;
+    stats.rarities[card.rarity] =
+      (stats.rarities[card.rarity] || 0) + 1;
   });
   saveStats();
   updateStatsDisplay();
@@ -145,7 +139,7 @@ function openPack() {
   saveCollection();
   renderCollection();
 
-  /* ---- RENDER PACK WITH ANIMATION ---- */
+  /* ---- RENDER + ANIMATION ---- */
   pulls.forEach((card, index) => {
     const div = document.createElement("div");
     div.className = "card";
@@ -173,7 +167,7 @@ document.getElementById("resetData").onclick = () => {
   renderCollection();
 };
 
-/* ---------------- INITIALIZE ---------------- */
 document.getElementById("openPack").onclick = openPack;
+
 updateStatsDisplay();
 renderCollection();
