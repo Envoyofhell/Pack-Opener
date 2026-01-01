@@ -159,16 +159,13 @@ function openPack() {
   });
 
   // Update collection
-  const packCounts = {};
-  pulls.forEach(card => {
-    packCounts[card.name] = (packCounts[card.name] || 0) + 1;
-  });
-  for (let name in packCounts) {
-    const card = pulls.find(c => c.name === name);
-    if (!collection[name]) {
-      collection[name] = { ...card, count: 0 };
+  for (let card of pulls) {
+    // Unique key: name + number
+    const key = `${card.name}_${card.number}`;
+    if (!collection[key]) {
+      collection[key] = { ...card, count: 0 };
     }
-    collection[name].count += packCounts[name];
+    collection[key].count += 1;
   }
 
   saveCollection();
