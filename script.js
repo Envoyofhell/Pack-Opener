@@ -70,15 +70,7 @@ function openPack() {
 
   const pulls = [];
 
-  stats.packsOpened++;
-
-  pulls.forEach(card => {
-  stats.rarities[card.rarity] = (stats.rarities[card.rarity] || 0) + 1;
-});
-
-saveStats();
-updateStatsDisplay();
-
+  // --- Generate pulls ---
   for (let i = 0; i < 7; i++) {
     pulls.push(randomFrom(getByRarity(weightedRoll([
       { rarity: "Common", weight: 4 },
@@ -108,28 +100,49 @@ updateStatsDisplay();
     { rarity: "Ultra Rare", weight: 1 }
   ]))));
 
-  pulls.forEach((card, index) => {
-  const div = document.createElement("div");
-  div.className = "card";
-  div.innerHTML = `<img src="${card.image}" alt="${card.name}">`;
-  pack.appendChild(div);
+  // --- Update stats ---
+  stats.packsOpened++;
 
+  pulls.forEach(card => {
+    stats.rarities[card.rarity] =
+      (stats.rarities[card.rarity] || 0) + 1;
+  });
+
+  saveStats();
+  updateStatsDisplay();
+
+  // --- Update collection (ONCE) ---
   const packCounts = {};
 
-pulls.forEach(card => {
-  packCounts[card.name] = (packCounts[card.name] || 0) + 1;
-});
+  pulls.forEach(card => {
+    packCounts[card.name] = (packCounts[card.name] || 0) + 1;
+  });
 
-for (let name in packCounts) {
-  const card = pulls.find(c => c.name === name);
+  for (let name in packCounts) {
+    const card = pulls.find(c => c.name === name);
 
-  if (!collection[name]) {
-    collection[name] = { ...card, count: 0 };
+    if (!collection[name]) {
+      collection[name] = { ...card, count: 0 };
+    }
+
+    collection[name].count += packCounts[name];
   }
 
-  collection[name].count += packCounts[name];
+  saveCollection();
+  renderCollection();
+
+  // --- Render pack with animation ---
+  pulls.forEach((card, index) => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `<img src="${card.image}" alt="${card.name}">`;
+    pack.appendChild(div);
+
+    setTimeout(() => {
+      div.classList.add("show");
+    }, index * 350);
+  });
 }
-    
 document.getElementById("resetData").onclick = () => {
   if (!confirm("This will erase all packs opened and your collection. Are you sure?")) return;
 
@@ -143,15 +156,6 @@ document.getElementById("resetData").onclick = () => {
   renderCollection();
 };
 
-saveCollection();
-renderCollection();
-
-  setTimeout(() => {
-    div.classList.add("show");
-  }, index * 350);
-});
-
-}
 
 document.getElementById("openPack").onclick = openPack;
 
