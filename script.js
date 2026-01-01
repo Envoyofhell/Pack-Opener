@@ -129,10 +129,23 @@ for (let name in packCounts) {
 
   collection[name].count += packCounts[name];
 }
+    
+document.getElementById("resetData").onclick = () => {
+  if (!confirm("This will erase all packs opened and your collection. Are you sure?")) return;
+
+  localStorage.removeItem("packStats");
+  localStorage.removeItem("collection");
+
+  stats = { packsOpened: 0, rarities: {} };
+  collection = {};
+
+  updateStatsDisplay();
+  renderCollection();
+};
 
 saveCollection();
 renderCollection();
-    
+
   setTimeout(() => {
     div.classList.add("show");
   }, index * 350);
