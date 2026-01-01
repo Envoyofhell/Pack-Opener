@@ -6,6 +6,7 @@ let stats = JSON.parse(localStorage.getItem("packStats")) || {
   rarities: {}
 };
 
+// Fixed rarity order for display
 const rarityOrder = [
   "Common",
   "Uncommon",
@@ -20,25 +21,14 @@ const rarityOrder = [
 function saveStats() {
   localStorage.setItem("packStats", JSON.stringify(stats));
 }
+
 function updateStatsDisplay() {
   const statsDiv = document.getElementById("stats");
   let html = `<h3>Packs Opened: ${stats.packsOpened}</h3><ul>`;
 
-  // Define rarities in fixed order
-  const rarityOrder = [
-    "Common",
-    "Uncommon",
-    "Rare",
-    "Double Rare",
-    "Illustration Rare",
-    "Ultra Rare",
-    "Special Illustration Rare",
-    "Hyper Rare"
-  ];
-
-  // Loop through all rarities in order
+  // Loop through rarities in fixed order, show 0 if none
   rarityOrder.forEach(rarity => {
-    const count = stats.rarities[rarity] || 0; // show 0 if user has none
+    const count = stats.rarities[rarity] || 0;
     html += `<li>${rarity}: ${count}</li>`;
   });
 
@@ -57,7 +47,28 @@ function renderCollection() {
   const colDiv = document.getElementById("collection");
   colDiv.innerHTML = "";
 
-  Object.values(collection).forEach(card => {
+  // Convert collection object to array for sorting
+  const collectionArray = Object.values(collection);
+
+  // Sort by 'number' (handle letters like 87a, 87b)
+  collectionArray.sort((a, b) => {
+    const matchA = a.number.match(/^(\d+)([a-z]?)$/i);
+    const matchB = b.number.match(/^(\d+)([a-z]?)$/i);
+
+    const numA = parseInt(matchA[1]);
+    const numB = parseInt(matchB[1]);
+
+    const letterA = matchA[2] || '';
+    const letterB = matchB[2] || '';
+
+    if (numA !== numB) return numA - numB;
+    if (letterA < letterB) return -1;
+    if (letterA > letterB) return 1;
+    return 0;
+  });
+
+  // Render sorted cards
+  collectionArray.forEach(card => {
     const div = document.createElement("div");
     div.className = "card show";
     div.innerHTML = `
@@ -141,13 +152,13 @@ function openPack() {
     { rarity: "Ultra Rare", weight: 1 }
   ]))));
 
-  // Stats
+  // Update stats
   stats.packsOpened++;
   pulls.forEach(card => {
     stats.rarities[card.rarity] = (stats.rarities[card.rarity] || 0) + 1;
   });
 
-  // Collection
+  // Update collection
   const packCounts = {};
   pulls.forEach(card => {
     packCounts[card.name] = (packCounts[card.name] || 0) + 1;
@@ -163,7 +174,7 @@ function openPack() {
   saveCollection();
   renderCollection();
 
-  // Render pack WITH animation first
+  // Render pack with animation
   pulls.forEach((card, index) => {
     const div = document.createElement("div");
     div.className = "card";
@@ -175,11 +186,10 @@ function openPack() {
     }, index * 350);
   });
 
-  // **Update stats AFTER pack is rendered**
+  // Update stats AFTER pack is rendered
   saveStats();
   updateStatsDisplay();
 }
-
 
 /* ---------------- RESET ---------------- */
 document.getElementById("resetData").onclick = () => {
