@@ -154,13 +154,13 @@ function openPack() {
 
   const pulls = [];
 
- // Slots 1–4 → Common only
+// Slots 1–4: Common
 for (let i = 0; i < 4; i++) {
   pulls.push(randomFrom(getByRarity("Common")));
 }
 
-// Slots 5–7 → Uncommon only
-for (let i = 0; i < 7; i++) {
+// Slots 5–7: Uncommon
+for (let i = 0; i < 3; i++) {
   pulls.push(randomFrom(getByRarity("Uncommon")));
 }
   
