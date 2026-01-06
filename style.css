@@ -310,11 +310,3 @@ h2, h3 {
 .rarity-Hyper\ Rare::before {
   animation-duration: 4s;
 }
-
-.card {
-  perspective: 800px;
-}
-
-.card:hover {
-  transform: translateY(-4px) rotateX(3deg) rotateY(-3deg);
-}
