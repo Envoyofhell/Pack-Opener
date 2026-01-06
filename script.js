@@ -69,7 +69,7 @@ function renderCollection() {
 
   collectionArray.forEach(card => {
     const div = document.createElement("div");
-    div.className = `card rarity-${card.rarity}`;
+    div.className = `card show rarity-${card.rarity}`;
     div.innerHTML = `
       <img src="${card.image}">
       <div>${card.name} ×${card.count}</div>
@@ -209,7 +209,8 @@ function openPack() {
   stats.totalCards += pulls.length;
 
   pulls.forEach(card => {
-    stats.rarities[card.rarity] = (stats.rarities[card.rarity] || 0) + 1;
+    stats.rarities[card.rarity] =
+      (stats.rarities[card.rarity] || 0) + 1;
   });
 
   /* ----- UPDATE COLLECTION ----- */
