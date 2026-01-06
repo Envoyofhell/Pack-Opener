@@ -8,7 +8,6 @@ let stats = JSON.parse(localStorage.getItem("packStats")) || {
   rarities: {}
 };
 
-// Fixed rarity order for display
 const rarityOrder = [
   "Common",
   "Uncommon",
@@ -26,12 +25,14 @@ function saveStats() {
 
 function updateStatsDisplay() {
   const statsDiv = document.getElementById("stats");
-  let html = `<h3>Packs Opened: ${stats.packsOpened}</h3>
-              <h3>Total cards: ${stats.totalCards}</h3>
-              <ul>`;
+  let html = `
+    <h3>Packs Opened: ${stats.packsOpened}</h3>
+    <h3>Total cards: ${stats.totalCards}</h3>
+    <ul>
+  `;
 
-  rarityOrder.forEach(rarity => {
-    html += `<li>${rarity}: ${stats.rarities[rarity] || 0}</li>`;
+  rarityOrder.forEach(r => {
+    html += `<li>${r}: ${stats.rarities[r] || 0}</li>`;
   });
 
   html += "</ul>";
@@ -45,6 +46,10 @@ function saveCollection() {
   localStorage.setItem("collection", JSON.stringify(collection));
 }
 
+function normalizeRarity(rarity) {
+  return rarity.replace(/\s+/g, "-");
+}
+
 function renderCollection() {
   const colDiv = document.getElementById("collection");
   colDiv.innerHTML = "";
@@ -52,26 +57,20 @@ function renderCollection() {
   const collectionArray = Object.values(collection);
 
   collectionArray.sort((a, b) => {
-    const matchA = a.number.match(/^(\d+)([a-z]?)$/i);
-    const matchB = b.number.match(/^(\d+)([a-z]?)$/i);
-
-    const numA = parseInt(matchA[1]);
-    const numB = parseInt(matchB[1]);
-
-    const letterA = matchA[2] || '';
-    const letterB = matchB[2] || '';
-
-    if (numA !== numB) return numA - numB;
-    if (letterA < letterB) return -1;
-    if (letterA > letterB) return 1;
-    return 0;
+    const ma = a.number.match(/^(\d+)([a-z]?)$/i);
+    const mb = b.number.match(/^(\d+)([a-z]?)$/i);
+    const na = parseInt(ma[1]);
+    const nb = parseInt(mb[1]);
+    if (na !== nb) return na - nb;
+    return (ma[2] || "").localeCompare(mb[2] || "");
   });
 
   collectionArray.forEach(card => {
+    const rarityClass = normalizeRarity(card.rarity);
     const div = document.createElement("div");
-    div.className = `card show rarity-${card.rarity}`;
+    div.className = `card show rarity-${rarityClass}`;
     div.innerHTML = `
-      <img src="${card.image}">
+      <img src="${card.image}" alt="${card.name}">
       <div>${card.name} ×${card.count}</div>
     `;
     colDiv.appendChild(div);
@@ -100,56 +99,45 @@ function loadSetFromUrl(set) {
     });
 }
 
-document.getElementById("loadPackFromFile").addEventListener("click", () => {
+/* ---------------- FILE LOAD ---------------- */
+document.getElementById("loadPackFromFile").onclick = () =>
   document.getElementById("jsonInput").click();
-});
 
-document.getElementById("jsonInput").addEventListener("change", () => {
-  const file = document.getElementById("jsonInput").files[0];
-  if (!file) return;
-
-  if (!file.name.endsWith(".json")) {
-    alert("Please upload a JSON file.");
-    return;
-  }
+document.getElementById("jsonInput").onchange = e => {
+  const file = e.target.files[0];
+  if (!file || !file.name.endsWith(".json")) return alert("Invalid JSON file");
 
   const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const json = JSON.parse(e.target.result);
-      cards = json.data;
-      buildAvailableRarities();
-      document.getElementById("openPack").disabled = false;
-      document.getElementById("loading").style.display = "none";
-    } catch {
-      alert("Invalid JSON file.");
-    }
+  reader.onload = ev => {
+    cards = JSON.parse(ev.target.result).data;
+    buildAvailableRarities();
+    document.getElementById("openPack").disabled = false;
+    document.getElementById("loading").style.display = "none";
   };
   reader.readAsText(file);
-});
+};
 
 /* ---------------- HELPERS ---------------- */
-function randomFrom(array) {
-  if (!array || !array.length) return null;
-  return array[Math.floor(Math.random() * array.length)];
+function randomFrom(arr) {
+  return arr?.length ? arr[Math.floor(Math.random() * arr.length)] : null;
 }
 
-function getByRarity(rarity) {
-  return availableRarities[rarity] || [];
+function getByRarity(r) {
+  return availableRarities[r] || [];
 }
 
 function weightedRoll(table) {
-  const filtered = table.filter(e => getByRarity(e.rarity).length);
-  if (!filtered.length) return null;
+  const valid = table.filter(e => getByRarity(e.rarity).length);
+  if (!valid.length) return null;
 
-  const total = filtered.reduce((s, e) => s + e.weight, 0);
+  const total = valid.reduce((s, e) => s + e.weight, 0);
   let roll = Math.random() * total;
 
-  for (let entry of filtered) {
-    if (roll < entry.weight) return entry.rarity;
-    roll -= entry.weight;
+  for (let e of valid) {
+    if (roll < e.weight) return e.rarity;
+    roll -= e.weight;
   }
-  return filtered[filtered.length - 1].rarity;
+  return valid.at(-1).rarity;
 }
 
 function pullWeighted(table) {
@@ -159,27 +147,18 @@ function pullWeighted(table) {
 
 /* ---------------- OPEN PACK ---------------- */
 function openPack() {
-  if (!cards.length) {
-    alert("Set not loaded yet.");
-    return;
-  }
+  if (!cards.length) return alert("Set not loaded.");
 
   const pack = document.getElementById("pack");
   pack.innerHTML = "";
-
   const pulls = [];
 
-  // Slots 1–4: Common
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i++)
     pulls.push(randomFrom(getByRarity("Common")) || randomFrom(cards));
-  }
 
-  // Slots 5–7: Uncommon
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 3; i++)
     pulls.push(randomFrom(getByRarity("Uncommon")) || randomFrom(cards));
-  }
 
-  // Slot 8
   pulls.push(pullWeighted([
     { rarity: "Common", weight: 33 },
     { rarity: "Uncommon", weight: 133 },
@@ -188,7 +167,6 @@ function openPack() {
     { rarity: "Hyper Rare", weight: 1 }
   ]));
 
-  // Slot 9
   pulls.push(pullWeighted([
     { rarity: "Common", weight: 85 },
     { rarity: "Uncommon", weight: 232 },
@@ -197,38 +175,29 @@ function openPack() {
     { rarity: "Hyper Rare", weight: 2.2 }
   ]));
 
-  // Slot 10
   pulls.push(pullWeighted([
     { rarity: "Rare", weight: 11 },
     { rarity: "Double Rare", weight: 3 },
     { rarity: "Ultra Rare", weight: 1 }
   ]));
 
-  /* ----- UPDATE STATS ----- */
   stats.packsOpened++;
   stats.totalCards += pulls.length;
 
   pulls.forEach(card => {
-    stats.rarities[card.rarity] =
-      (stats.rarities[card.rarity] || 0) + 1;
-  });
-
-  /* ----- UPDATE COLLECTION ----- */
-  pulls.forEach(card => {
+    stats.rarities[card.rarity] = (stats.rarities[card.rarity] || 0) + 1;
     const key = `${card.name}_${card.number}`;
-    if (!collection[key]) {
-      collection[key] = { ...card, count: 0 };
-    }
+    collection[key] ??= { ...card, count: 0 };
     collection[key].count++;
   });
 
   saveCollection();
   renderCollection();
 
-  /* ----- RENDER PACK ----- */
   pulls.forEach((card, i) => {
+    const rarityClass = normalizeRarity(card.rarity);
     const div = document.createElement("div");
-    div.className = `card rarity-${card.rarity}`;
+    div.className = `card rarity-${rarityClass}`;
     div.innerHTML = `<img src="${card.image}" alt="${card.name}">`;
     pack.appendChild(div);
     setTimeout(() => div.classList.add("show"), i * 350);
@@ -240,7 +209,7 @@ function openPack() {
 
 /* ---------------- RESET ---------------- */
 document.getElementById("resetData").onclick = () => {
-  if (!confirm("This will erase all data. Continue?")) return;
+  if (!confirm("Erase all data?")) return;
   localStorage.clear();
   stats = { packsOpened: 0, totalCards: 0, rarities: {} };
   collection = {};
@@ -250,7 +219,7 @@ document.getElementById("resetData").onclick = () => {
 
 document.getElementById("openPack").onclick = openPack;
 
-/* ---- INITIAL LOAD ---- */
+/* ---------------- INIT ---------------- */
 loadSetFromUrl("Z-Genesis_Melemele");
 updateStatsDisplay();
 renderCollection();
