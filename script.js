@@ -101,7 +101,6 @@ function openPack(){
   });
 }
 
-/* ---------- REVEAL LAST 3 ON CLICK ---------- */
 packDiv.addEventListener("click", function revealLastThree(){
   const lastThree=packDiv.querySelectorAll(".last-three-hidden");
   lastThree.forEach(div=>div.classList.add("show"));
@@ -110,11 +109,11 @@ packDiv.addEventListener("click", function revealLastThree(){
 });
 
 /* ---------- START SCREEN ---------- */
-const availableSets=["Z-Genesis_Melemele","XY-Sunshine","ABC-ExampleSet"];
-availableSets.forEach(setName=>{
+const setsList=["Z-Genesis_Melemele","XY-Sunshine","ABC-ExampleSet"];
+setsList.forEach(s=>{
   const btn=document.createElement("button");
-  btn.textContent=setName;
-  btn.onclick=()=>loadSet(`sets/${setName}.json`);
+  btn.textContent=s;
+  btn.onclick=()=>loadSet(`sets/${s}.json`);
   availableSetsDiv.appendChild(btn);
 });
 
@@ -123,9 +122,7 @@ jsonInput.onchange=(e)=>{
   const f=jsonInput.files[0];
   if(!f||!f.name.endsWith(".json")) return alert("Please select a JSON file");
   const reader=new FileReader();
-  reader.onload=ev=>{
-    try{ loadSet(ev.target.result); }catch{alert("Invalid JSON file");}
-  };
+  reader.onload=ev=>{ try{ loadSet(ev.target.result); } catch { alert("Invalid JSON file"); } };
   reader.readAsText(f);
 };
 
