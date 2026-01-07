@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<!-- ===== START SCREEN ===== -->
+<!-- START SCREEN -->
 <div id="start-screen">
   <h2>Choose a Set</h2>
   <select id="setSelector">
@@ -19,21 +19,19 @@
   <input type="file" id="fileInput" accept=".json" style="display:none">
 </div>
 
-<!-- ===== OPEN PACK PAGE ===== -->
+<!-- OPEN PACK PAGE -->
 <div id="openPackPage" class="hidden">
   <div id="loading" style="display:none;">Loading set...</div>
-  <div id="pack-container">
-    <button id="openPack" disabled>Open Pack</button>
-    <div id="pack"></div>
-    <div id="underPackControls">
-      <button id="viewCollectionStats">View Collection & Stats</button>
-      <button id="backToStart">Back to Start</button>
-      <button id="resetData">Reset All Data</button>
-    </div>
+  <button id="openPack" disabled>Open Pack</button>
+  <div id="pack"></div>
+  <div>
+    <button id="viewCollectionStats">View Collection & Stats</button>
+    <button id="backToStart">Back to Start</button>
+    <button id="resetData">Reset All Data</button>
   </div>
 </div>
 
-<!-- ===== COLLECTION + STATS PAGE ===== -->
+<!-- COLLECTION + STATS PAGE -->
 <div id="collectionStatsPage" class="hidden">
   <h2>Collection</h2>
   <label>Filter by Rarity: 
