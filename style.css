@@ -76,11 +76,6 @@ button:disabled { background:#444; cursor:not-allowed; box-shadow:none; }
 100%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}
 }
 
-/* ---------- PROGRESS BARS ---------- */
-#completion { margin-top:20px; display:flex; flex-direction:column; gap:8px; align-items:center; }
-#completion > div { width: 200px; margin:auto; }
-#completion > div > div { transition: width 0.5s ease; height: 12px; border-radius: 6px; }
-
 /* ---------- LAST 3 CARDS HIDDEN + PULSE ---------- */
 @keyframes pulseGlow {
   0% { box-shadow:0 0 10px rgba(255,255,255,0.2);}
