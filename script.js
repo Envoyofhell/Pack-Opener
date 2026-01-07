@@ -1,6 +1,6 @@
 let cards = [];
 let availableRarities = {};
-let collection = {};
+let collection = JSON.parse(localStorage.getItem("collection")) || {};
 let stats = JSON.parse(localStorage.getItem("packStats")) || {
   packsOpened: 0,
   totalCards: 0,
@@ -10,14 +10,12 @@ let stats = JSON.parse(localStorage.getItem("packStats")) || {
 const regularRarities = ["Common","Uncommon","Rare","Double Rare"];
 const masterRarities = ["Common","Uncommon","Rare","Double Rare","Illustration Rare","Ultra Rare","Special Illustration Rare","Hyper Rare"];
 
-/* ---------- DOM ELEMENTS ---------- */
+/* ---------- DOM ---------- */
 const startScreen = document.getElementById("start-screen");
 const app = document.getElementById("app");
 const packDiv = document.getElementById("pack");
-const statsPage = document.getElementById("statsPage");
-const collectionPage = document.getElementById("collectionPage");
+const collectionDiv = document.getElementById("collection");
 const filterSelect = document.getElementById("rarityFilter");
-const underPackControls = document.getElementById("underPackControls");
 const loading = document.getElementById("loading");
 
 /* ---------- LOAD SETS ---------- */
@@ -29,8 +27,8 @@ fetch("sets/index.json")
   .then(data => {
     data.forEach(filename => {
       const opt = document.createElement("option");
-      opt.value = filename; // includes .json
-      opt.textContent = filename.replace(".json",""); // display nicely
+      opt.value = filename;
+      opt.textContent = filename.replace(".json","");
       setSelector.appendChild(opt);
     });
   });
@@ -59,7 +57,6 @@ function loadSet(path){
 
 function initSet(data){
   cards = data;
-  collection = {};
   availableRarities = {};
 
   cards.forEach(c=>{
@@ -70,9 +67,7 @@ function initSet(data){
   buildFilter();
   startScreen.classList.add("hidden");
   app.classList.remove("hidden");
-  underPackControls.classList.add("hidden");
-  document.getElementById("openPack").disabled = false;
-  renderCollection();
+  renderCollection(); // render immediately
   updateStats();
   updateCompletion();
   loading.style.display = "none";
@@ -80,6 +75,8 @@ function initSet(data){
 
 /* ---------- HELPERS ---------- */
 function randomFrom(arr){ if(!arr || !arr.length) return null; return arr[Math.floor(Math.random()*arr.length)]; }
+function saveCollection(){ localStorage.setItem("collection",JSON.stringify(collection)); }
+function saveStats(){ localStorage.setItem("packStats",JSON.stringify(stats)); }
 
 function pullWeighted(table){
   const valid = table.filter(e => availableRarities[e.rarity]?.length);
@@ -87,8 +84,8 @@ function pullWeighted(table){
   const total = valid.reduce((s,e)=>s+e.weight,0);
   let roll = Math.random()*total;
   for(let e of valid){
-    if(roll < e.weight) return randomFrom(availableRarities[e.rarity]);
-    roll -= e.weight;
+    if(roll<e.weight) return randomFrom(availableRarities[e.rarity]);
+    roll-=e.weight;
   }
   return randomFrom(cards);
 }
@@ -98,9 +95,9 @@ document.getElementById("openPack").onclick = () => {
   packDiv.innerHTML = "";
   const pulls = [];
 
-  // Slots 1-4: Common
+  // Slots 1-4 Common
   for(let i=0;i<4;i++) pulls.push(randomFrom(availableRarities["Common"] || cards));
-  // Slots 5-7: Uncommon
+  // Slots 5-7 Uncommon
   for(let i=0;i<3;i++) pulls.push(randomFrom(availableRarities["Uncommon"] || cards));
 
   // Slot 8
@@ -141,8 +138,11 @@ document.getElementById("openPack").onclick = () => {
     collection[key].count++;
   });
 
+  saveCollection();
+  saveStats();
+
   renderPack(pulls);
-  underPackControls.classList.remove("hidden");
+  renderCollection();
   updateStats();
   updateCompletion();
 };
@@ -161,29 +161,27 @@ function renderPack(pulls){
 
 /* ---------- COLLECTION ---------- */
 function renderCollection(){
-  const filter = filterSelect.value;
-  const container = collectionPage.querySelector("#collection");
-  container.innerHTML = "";
-
+  const filter = filterSelect.value || "All"; // fix first-time issue
   const arr = Object.values(collection)
-    .filter(c=>filter==="All" || c.rarity===filter)
+    .filter(c => filter==="All" || c.rarity===filter)
     .sort((a,b)=>{
-      const mA = a.number.match(/^(\d+)([a-z]?)$/i);
-      const mB = b.number.match(/^(\d+)([a-z]?)$/i);
-      const nA = parseInt(mA[1]), nB = parseInt(mB[1]);
-      const lA = mA[2] || "", lB = mB[2] || "";
+      const mA=a.number.match(/^(\d+)([a-z]?)$/i);
+      const mB=b.number.match(/^(\d+)([a-z]?)$/i);
+      const nA=parseInt(mA[1]), nB=parseInt(mB[1]);
+      const lA=mA[2]||"", lB=mB[2]||"";
       if(nA!==nB) return nA-nB;
       if(lA<lB) return -1;
       if(lA>lB) return 1;
       return 0;
     });
 
+  collectionDiv.innerHTML = "";
   arr.forEach(card=>{
     const cls = card.rarity.replace(/\s+/g,"-");
     const div = document.createElement("div");
     div.className = `card rarity-${cls} show`;
     div.innerHTML = `<img src="${card.image}"><div>${card.name} ×${card.count}</div>`;
-    container.appendChild(div);
+    collectionDiv.appendChild(div);
   });
 }
 
@@ -201,11 +199,11 @@ filterSelect.onchange = renderCollection;
 
 /* ---------- STATS ---------- */
 function updateStats(){
-  const statsDiv = statsPage.querySelector("#stats");
+  const statsDiv = document.getElementById("stats");
   let html = `<h3>Packs Opened: ${stats.packsOpened}</h3>
               <h3>Total Cards: ${stats.totalCards}</h3><ul>`;
   Object.entries(stats.rarities).forEach(([r,c])=>html+=`<li>${r}: ${c}</li>`);
-  html += "</ul>";
+  html+="</ul>";
   statsDiv.innerHTML = html;
 }
 
@@ -217,41 +215,21 @@ function updateCompletion(){
   const totalRegular = cards.filter(c=>regularRarities.includes(c.rarity)).length;
   const ownedRegular = uniqueOwned.filter(k=>regularRarities.includes(collection[k].rarity)).length;
   const regPct = Math.floor((ownedRegular/totalRegular)*100);
-  statsPage.querySelector("#regularLabel").textContent = `Regular: ${ownedRegular}/${totalRegular} (${regPct}%)`;
-  statsPage.querySelector("#regularBar").style.width = regPct+"%";
+  document.getElementById("regularLabel").textContent=`Regular: ${ownedRegular}/${totalRegular} (${regPct}%)`;
+  document.getElementById("regularBar").style.width=regPct+"%";
 
   // Master
   const totalMaster = cards.length;
   const ownedMaster = uniqueOwned.length;
   const masPct = Math.floor((ownedMaster/totalMaster)*100);
-  const masterBox = statsPage.querySelector("#masterContainer");
-  if(totalMaster === ownedMaster) masterBox.style.display = "none";
-  else masterBox.style.display = "block";
-  statsPage.querySelector("#masterLabel").textContent = `Master: ${ownedMaster}/${totalMaster} (${masPct}%)`;
-  statsPage.querySelector("#masterBar").style.width = masPct+"%";
+  const masterBox = document.getElementById("masterContainer");
+  if(totalMaster===ownedMaster) masterBox.style.display="none";
+  else masterBox.style.display="block";
+  document.getElementById("masterLabel").textContent=`Master: ${ownedMaster}/${totalMaster} (${masPct}%)`;
+  document.getElementById("masterBar").style.width=masPct+"%";
 }
 
-/* ---------- NAVIGATION ---------- */
-document.getElementById("backToAppFromStats").onclick = ()=>{
-  statsPage.classList.add("hidden");
-  app.classList.remove("hidden");
-};
-document.getElementById("viewStats").onclick = ()=>{
-  app.classList.add("hidden");
-  statsPage.classList.remove("hidden");
-};
-document.getElementById("backToAppFromCollection").onclick = ()=>{
-  collectionPage.classList.add("hidden");
-  app.classList.remove("hidden");
-};
-document.getElementById("viewCollection").onclick = ()=>{
-  app.classList.add("hidden");
-  collectionPage.classList.remove("hidden");
-};
-document.getElementById("backToStart").onclick = ()=>{
-  app.classList.add("hidden");
-  startScreen.classList.remove("hidden");
-};
+/* ---------- RESET / BACK ---------- */
 document.getElementById("resetData").onclick = ()=>{
   if(!confirm("Reset all data?")) return;
   localStorage.clear();
@@ -260,4 +238,8 @@ document.getElementById("resetData").onclick = ()=>{
   renderCollection();
   updateStats();
   updateCompletion();
+};
+document.getElementById("backToStart").onclick = ()=>{
+  app.classList.add("hidden");
+  startScreen.classList.remove("hidden");
 };
