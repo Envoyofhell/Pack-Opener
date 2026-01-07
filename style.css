@@ -83,5 +83,5 @@ button:disabled { background:#444; cursor:not-allowed; box-shadow:none;}
 
 /* ---------- PROGRESS BARS ---------- */
 #completion { margin-top:20px; display:flex; flex-direction:column; gap:8px; align-items:center; }
-#completion div { width: 200px; } /* smaller width for both bars */
-#completion div div { transition: width 0.5s ease; }
+#completion > div { width: 200px; margin:auto; }  /* smaller wrapper width */
+#completion > div > div { transition: width 0.5s ease; height: 12px; border-radius: 6px; }
