@@ -9,11 +9,10 @@ body {
 
 .hidden { display: none; }
 
-/* ---------- START SCREEN ---------- */
-#start-screen {
-  padding-top: 120px;
-}
+/* ---------- START ---------- */
+#start-screen { padding-top: 120px; }
 
+/* ---------- BUTTONS ---------- */
 button {
   padding: 14px 30px;
   font-size: 17px;
@@ -37,42 +36,57 @@ button {
 /* ---------- CARD ---------- */
 .card {
   width: 200px;
-  padding: 6px;
-  background: linear-gradient(180deg,#1f1f1f,#121212);
-  border-radius: 14px;
-  opacity: 0;
-  transform: translateY(30px) scale(0.95);
-  transition: opacity .4s ease, transform .4s ease;
+  perspective: 1000px;
 }
 
-.card.show {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+.card-inner {
+  position: relative;
+  width: 100%;
+  transition: transform .6s;
+  transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  backface-visibility: hidden;
+  border-radius: 14px;
+}
+
+.card-back {
+  background: #222;
+  height: 280px;
+}
+
+.card-front {
+  transform: rotateY(180deg);
 }
 
 .card img {
   width: 100%;
-  border-radius: 10px;
+  border-radius: 14px;
 }
 
-/* ---------- REVEAL ANIMATION ---------- */
+/* ---------- REVEAL ---------- */
 .reveal-hit {
-  animation: hitPop 0.45s ease-out, hitPulse 1.2s ease-out;
+  animation: hitPop .45s ease-out, hitPulse 1.2s ease-out;
 }
 
 @keyframes hitPop {
-  0% { transform: scale(0.85); }
+  0% { transform: scale(.85); }
   60% { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
 
 @keyframes hitPulse {
-  0% { box-shadow: 0 0 0 rgba(255,255,255,0); }
-  50% { box-shadow: 0 0 25px rgba(255,255,255,0.35); }
+  0% { box-shadow: 0 0 0 transparent; }
+  50% { box-shadow: 0 0 30px rgba(255,255,255,.4); }
   100% { box-shadow: inherit; }
 }
 
-/* ---------- RARITY GLOWS ---------- */
+/* ---------- GLOWS ---------- */
 .rarity-Common { box-shadow: 0 0 8px rgba(255,255,255,.15); }
 .rarity-Uncommon { box-shadow: 0 0 12px rgba(34,197,94,.5); }
 .rarity-Rare { box-shadow: 0 0 16px rgba(59,130,246,.7); }
@@ -89,4 +103,18 @@ button {
   0% { box-shadow: 0 0 24px red; }
   50% { box-shadow: 0 0 24px cyan; }
   100% { box-shadow: 0 0 24px red; }
+}
+
+/* ---------- PROGRESS ---------- */
+.progress {
+  width: 260px;
+  background: #222;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 6px auto;
+}
+
+.progress-bar {
+  height: 12px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
 }
