@@ -160,20 +160,24 @@ function openPack() {
     pulls.push(randomFrom(getByRarity("Uncommon")) || randomFrom(cards));
 
   pulls.push(pullWeighted([
-    { rarity: "Common", weight: 33 },
-    { rarity: "Uncommon", weight: 133 },
-    { rarity: "Illustration Rare", weight: 6.25 },
-    { rarity: "Special Illustration Rare", weight: 1.75 },
-    { rarity: "Hyper Rare", weight: 1 }
+    { rarity: "Common", weight: 55 },
+    { rarity: "Uncommon", weight: 32 },
+    { rarity: "Rare", weight: 11 },
+    { rarity: "Illustration Rare", weight: 1.5 },
+    { rarity: "Special Illustration Rare", weight: 0.4 },
+    { rarity: "Hyper Rare", weight: 0.1 }
   ]));
 
+
   pulls.push(pullWeighted([
-    { rarity: "Common", weight: 85 },
-    { rarity: "Uncommon", weight: 232 },
-    { rarity: "Illustration Rare", weight: 17 },
-    { rarity: "Special Illustration Rare", weight: 3.8 },
-    { rarity: "Hyper Rare", weight: 2.2 }
+    { rarity: "Common", weight: 35 },
+    { rarity: "Uncommon", weight: 43 },
+    { rarity: "Rare", weight: 18 },
+    { rarity: "Illustration Rare", weight: 12 },
+    { rarity: "Special Illustration Rare", weight: 2.3 },
+    { rarity: "Hyper Rare", weight: 0.7 }
   ]));
+
 
   pulls.push(pullWeighted([
     { rarity: "Rare", weight: 11 },
