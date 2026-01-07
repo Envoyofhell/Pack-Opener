@@ -1,72 +1,60 @@
-let cards = [];
-let availableRarities = {};
-let stats = JSON.parse(localStorage.getItem("packStats")) || { packsOpened:0,totalCards:0,rarities:{} };
-let collection = JSON.parse(localStorage.getItem("collection")) || {};
+let cards=[], availableRarities={};
+let stats=JSON.parse(localStorage.getItem("packStats"))||{packsOpened:0,totalCards:0,rarities:{}};
+let collection=JSON.parse(localStorage.getItem("collection"))||{};
 
 /* ---------- DOM ---------- */
-const startScreen = document.getElementById("startScreen");
-const app = document.getElementById("app");
-const openPackBtn = document.getElementById("openPack");
-const viewCollectionBtn = document.getElementById("viewCollection");
-const backToStartBtn = document.getElementById("backToStart");
-const packDiv = document.getElementById("pack");
-const collectionDiv = document.getElementById("collection");
-const statsDiv = document.getElementById("stats");
-const completionDiv = document.getElementById("completion");
-const loadingDiv = document.getElementById("loading");
-const availableSetsDiv = document.getElementById("availableSets");
-const importSetBtn = document.getElementById("importSet");
-const jsonInput = document.getElementById("jsonInput");
+const startScreen=document.getElementById("startScreen");
+const app=document.getElementById("app");
+const openPackBtn=document.getElementById("openPack");
+const viewCollectionBtn=document.getElementById("viewCollection");
+const backToStartBtn=document.getElementById("backToStart");
+const packDiv=document.getElementById("pack");
+const collectionDiv=document.getElementById("collection");
+const statsDiv=document.getElementById("stats");
+const completionDiv=document.getElementById("completion");
+const loadingDiv=document.getElementById("loading");
+const availableSetsDiv=document.getElementById("availableSets");
+const importSetBtn=document.getElementById("importSet");
+const jsonInput=document.getElementById("jsonInput");
 
 /* ---------- STATS & COLLECTION ---------- */
 function saveStats(){ localStorage.setItem("packStats",JSON.stringify(stats)); }
 function saveCollection(){ localStorage.setItem("collection",JSON.stringify(collection)); }
 
 function updateStatsDisplay(){
-  let html = `<h3>Packs Opened: ${stats.packsOpened}</h3>
-              <h3>Total cards: ${stats.totalCards}</h3>
-              <ul>`;
-  ["Common","Uncommon","Rare","Double Rare","Illustration Rare","Ultra Rare","Special Illustration Rare","Hyper Rare"].forEach(r=>{
-    html += `<li>${r}: ${stats.rarities[r]||0}</li>`;
-  });
-  html += "</ul>";
-  statsDiv.innerHTML = html;
+  let html=`<h3>Packs Opened: ${stats.packsOpened}</h3><h3>Total cards: ${stats.totalCards}</h3><ul>`;
+  ["Common","Uncommon","Rare","Double Rare","Illustration Rare","Ultra Rare","Special Illustration Rare","Hyper Rare"].forEach(r=>html+=`<li>${r}: ${stats.rarities[r]||0}</li>`);
+  html+="</ul>";
+  statsDiv.innerHTML=html;
 }
 
 /* ---------- COLLECTION ---------- */
 function renderCollection(){
-  collectionDiv.innerHTML = "";
-  const arr = Object.values(collection);
+  collectionDiv.innerHTML="";
+  const arr=Object.values(collection);
   arr.sort((a,b)=>{
-    const ma = a.number.match(/^(\d+)([a-z]?)$/i);
-    const mb = b.number.match(/^(\d+)([a-z]?)$/i);
-    const na = parseInt(ma[1]), nb = parseInt(mb[1]);
-    const la = ma[2]||'', lb = mb[2]||'';
+    const ma=a.number.match(/^(\d+)([a-z]?)$/i);
+    const mb=b.number.match(/^(\d+)([a-z]?)$/i);
+    const na=parseInt(ma[1]), nb=parseInt(mb[1]);
+    const la=ma[2]||'', lb=mb[2]||'';
     if(na!==nb) return na-nb; if(la<lb) return -1; if(la>lb) return 1; return 0;
   });
   arr.forEach(c=>{
-    const div = document.createElement("div");
-    div.className = `card rarity-${c.rarity.replace(/\s+/g,'-')}`;
-    div.innerHTML = `<img src="${c.image}"><div>${c.name} ×${c.count}</div>`;
+    const div=document.createElement("div");
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
+    div.innerHTML=`<img src="${c.image}"><div>${c.name} ×${c.count}</div>`;
     collectionDiv.appendChild(div);
   });
 }
 
 /* ---------- LOAD SET ---------- */
-function buildAvailableRarities(){
-  availableRarities = {};
-  cards.forEach(c=>{ if(!availableRarities[c.rarity]) availableRarities[c.rarity]=[]; availableRarities[c.rarity].push(c); });
-}
+function buildAvailableRarities(){ availableRarities={}; cards.forEach(c=>{if(!availableRarities[c.rarity]) availableRarities[c.rarity]=[]; availableRarities[c.rarity].push(c);}); }
 
 function loadSet(file){
   loadingDiv.style.display="block";
   fetch(file).then(r=>r.json()).then(j=>{
-    cards=j.data;
-    buildAvailableRarities();
-    loadingDiv.style.display="none";
-    openPackBtn.disabled=false;
-    startScreen.classList.add("hidden");
-    app.classList.remove("hidden");
+    cards=j.data; buildAvailableRarities(); loadingDiv.style.display="none";
+    openPackBtn.disabled=false; startScreen.classList.add("hidden"); app.classList.remove("hidden");
   });
 }
 
@@ -74,7 +62,7 @@ function loadSet(file){
 function randomFrom(arr){ if(!arr||!arr.length) return null; return arr[Math.floor(Math.random()*arr.length)]; }
 function getByRarity(r){ return availableRarities[r]||[]; }
 function weightedRoll(table){
-  const filtered = table.filter(e=>getByRarity(e.rarity).length);
+  const filtered=table.filter(e=>getByRarity(e.rarity).length);
   if(!filtered.length) return null;
   let total=filtered.reduce((s,e)=>s+e.weight,0), roll=Math.random()*total;
   for(let e of filtered){ if(roll<e.weight) return e.rarity; roll-=e.weight; }
@@ -107,12 +95,20 @@ function openPack(){
   pulls.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
-    if(i>=pulls.length-3) div.classList.add("last-three");
+    if(i>=pulls.length-3) div.classList.add("last-three-hidden");
     div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
     packDiv.appendChild(div);
-    setTimeout(()=>div.classList.add("show"),i*350);
+    if(i<pulls.length-3) setTimeout(()=>div.classList.add("show"),i*350);
   });
 }
+
+/* ---------- REVEAL LAST 3 ON CLICK ---------- */
+packDiv.addEventListener("click", function revealLastThree(){
+  const lastThree=packDiv.querySelectorAll(".last-three-hidden");
+  lastThree.forEach(div=>div.classList.add("show"));
+  lastThree.forEach(div=>div.classList.remove("last-three-hidden"));
+  packDiv.removeEventListener("click", revealLastThree);
+});
 
 /* ---------- START SCREEN ---------- */
 importSetBtn.onclick=()=>jsonInput.click();
