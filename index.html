@@ -10,17 +10,9 @@
 <!-- START SCREEN -->
 <div id="start-screen">
   <h1>Pokémon Pack Simulator</h1>
-
-  <h3>Select a Set</h3>
-  <button onclick="loadPredefinedSet('Z-Genesis_Melemele')">
-    Z-Genesis: Melemele
-  </button>
-
-  <h3>Or Import a Set</h3>
-  <button onclick="document.getElementById('jsonInput').click()">
-    Import JSON
-  </button>
-  <input type="file" id="jsonInput" accept=".json" hidden>
+  <button id="loadDefault">Load Default Set</button>
+  <button id="importSet">Import Set</button>
+  <input type="file" id="fileInput" accept=".json" hidden>
 </div>
 
 <!-- MAIN APP -->
@@ -28,30 +20,19 @@
 
   <div id="controls">
     <button id="openPack" disabled>Open Pack</button>
-    <button onclick="goToStart()">Change Set</button>
+    <button id="backToStart">Change Set</button>
     <button id="resetData">Reset Data</button>
   </div>
 
-  <div id="loading" class="hidden">Loading set…</div>
+  <div id="loading">Loading set…</div>
 
-  <div id="completion"></div>
+  <div id="stats"></div>
 
-  <div id="collection-filters">
-    <label>Filter:</label>
-    <select id="rarityFilter">
-      <option value="ALL">All</option>
-    </select>
-  </div>
+  <h2>Pack</h2>
+  <div id="pack"></div>
 
-  <div id="pack-container">
-    <h2>Pack</h2>
-    <div id="pack"></div>
-  </div>
-
-  <div id="collection-container">
-    <h2>Collection</h2>
-    <div id="collection"></div>
-  </div>
+  <h2>Collection</h2>
+  <div id="collection"></div>
 
 </div>
 
