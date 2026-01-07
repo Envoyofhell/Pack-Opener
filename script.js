@@ -7,10 +7,8 @@ let stats = JSON.parse(localStorage.getItem("packStats")) || {
   rarities: {}
 };
 
-const rarityOrder = [
-  "Common",
-  "Uncommon",
-  "Rare",
+const regularRarities = ["Common", "Uncommon", "Rare"];
+const masterRarities = [
   "Double Rare",
   "Illustration Rare",
   "Ultra Rare",
@@ -23,31 +21,24 @@ const app = document.getElementById("app");
 const loading = document.getElementById("loading");
 const packDiv = document.getElementById("pack");
 const collectionDiv = document.getElementById("collection");
+const filterSelect = document.getElementById("rarityFilter");
 
-/* ---------- SET LOADING ---------- */
-document.getElementById("loadDefault").onclick = () => {
+/* ---------- LOAD SET ---------- */
+document.getElementById("loadDefault").onclick = () =>
   loadSet("sets/Z-Genesis_Melemele.json");
-};
 
-document.getElementById("importSet").onclick = () => {
+document.getElementById("importSet").onclick = () =>
   document.getElementById("fileInput").click();
-};
 
 document.getElementById("fileInput").addEventListener("change", e => {
   const reader = new FileReader();
-  reader.onload = ev => {
-    const json = JSON.parse(ev.target.result);
-    initSet(json.data);
-  };
+  reader.onload = ev => initSet(JSON.parse(ev.target.result).data);
   reader.readAsText(e.target.files[0]);
 });
 
 function loadSet(path) {
   loading.style.display = "block";
-  fetch(path)
-    .then(r => r.json())
-    .then(j => initSet(j.data))
-    .catch(() => alert("Failed to load set"));
+  fetch(path).then(r => r.json()).then(j => initSet(j.data));
 }
 
 function initSet(data) {
@@ -56,12 +47,11 @@ function initSet(data) {
   availableRarities = {};
 
   cards.forEach(c => {
-    if (!availableRarities[c.rarity]) {
-      availableRarities[c.rarity] = [];
-    }
+    if (!availableRarities[c.rarity]) availableRarities[c.rarity] = [];
     availableRarities[c.rarity].push(c);
   });
 
+  buildFilter();
   startScreen.classList.add("hidden");
   app.classList.remove("hidden");
   document.getElementById("openPack").disabled = false;
@@ -69,6 +59,7 @@ function initSet(data) {
 
   renderCollection();
   updateStats();
+  updateCompletion();
 }
 
 /* ---------- HELPERS ---------- */
@@ -78,26 +69,20 @@ function randomFrom(arr) {
 }
 
 function pullWeighted(table) {
-  const filtered = table.filter(e => availableRarities[e.rarity]?.length);
-  const total = filtered.reduce((s, e) => s + e.weight, 0);
+  const valid = table.filter(e => availableRarities[e.rarity]?.length);
+  let total = valid.reduce((s, e) => s + e.weight, 0);
   let roll = Math.random() * total;
-
-  for (let e of filtered) {
+  for (let e of valid) {
     if (roll < e.weight) return randomFrom(availableRarities[e.rarity]);
     roll -= e.weight;
   }
   return randomFrom(cards);
 }
 
-function isGodPack() {
-  return Math.random() < 0.001;
-}
-
 /* ---------- OPEN PACK ---------- */
 document.getElementById("openPack").onclick = () => {
   packDiv.innerHTML = "";
   const pulls = [];
-  const god = isGodPack();
 
   for (let i = 0; i < 4; i++) pulls.push(randomFrom(availableRarities["Common"] || cards));
   for (let i = 0; i < 3; i++) pulls.push(randomFrom(availableRarities["Uncommon"] || cards));
@@ -116,32 +101,28 @@ document.getElementById("openPack").onclick = () => {
     { rarity: "Illustration Rare", weight: 12 }
   ]));
 
-  pulls.push(god
-    ? randomFrom(availableRarities["Illustration Rare"] || cards)
-    : pullWeighted([
-        { rarity: "Rare", weight: 72 },
-        { rarity: "Double Rare", weight: 21 },
-        { rarity: "Ultra Rare", weight: 6 },
-        { rarity: "Special Illustration Rare", weight: 1.5 },
-        { rarity: "Hyper Rare", weight: 0.5 }
-      ])
-  );
+  pulls.push(pullWeighted([
+    { rarity: "Rare", weight: 72 },
+    { rarity: "Double Rare", weight: 21 },
+    { rarity: "Ultra Rare", weight: 6 },
+    { rarity: "Special Illustration Rare", weight: 1.5 },
+    { rarity: "Hyper Rare", weight: 0.5 }
+  ]));
 
   stats.packsOpened++;
   stats.totalCards += pulls.length;
 
   pulls.forEach(card => {
     stats.rarities[card.rarity] = (stats.rarities[card.rarity] || 0) + 1;
-
     const key = card.name + "_" + card.number;
     if (!collection[key]) collection[key] = { ...card, count: 0 };
     collection[key].count++;
   });
 
-  saveStats();
   renderPack(pulls);
   renderCollection();
   updateStats();
+  updateCompletion();
 };
 
 /* ---------- RENDER ---------- */
@@ -157,14 +138,61 @@ function renderPack(pulls) {
 }
 
 function renderCollection() {
+  const filter = filterSelect.value;
   collectionDiv.innerHTML = "";
-  Object.values(collection).forEach(card => {
-    const cls = card.rarity.replace(/\s+/g, "-");
-    const div = document.createElement("div");
-    div.className = `card rarity-${cls} show`;
-    div.innerHTML = `<img src="${card.image}"><div>${card.name} ×${card.count}</div>`;
-    collectionDiv.appendChild(div);
+
+  Object.values(collection)
+    .filter(c => filter === "All" || c.rarity === filter)
+    .forEach(card => {
+      const cls = card.rarity.replace(/\s+/g, "-");
+      const div = document.createElement("div");
+      div.className = `card rarity-${cls} show`;
+      div.innerHTML = `<img src="${card.image}"><div>${card.name} ×${card.count}</div>`;
+      collectionDiv.appendChild(div);
+    });
+}
+
+/* ---------- FILTER ---------- */
+function buildFilter() {
+  filterSelect.innerHTML = `<option value="All">All</option>`;
+  Object.keys(availableRarities).forEach(r => {
+    const opt = document.createElement("option");
+    opt.value = r;
+    opt.textContent = r;
+    filterSelect.appendChild(opt);
   });
+}
+
+filterSelect.onchange = renderCollection;
+
+/* ---------- COMPLETION ---------- */
+function updateCompletion() {
+  const uniqueOwned = Object.keys(collection);
+  const totalRegular = cards.filter(c => regularRarities.includes(c.rarity)).length;
+  const ownedRegular = uniqueOwned.filter(k =>
+    regularRarities.includes(collection[k].rarity)
+  ).length;
+
+  const regPct = Math.floor((ownedRegular / totalRegular) * 100);
+  document.getElementById("regularLabel").textContent =
+    `Regular: ${ownedRegular}/${totalRegular} (${regPct}%)`;
+  document.getElementById("regularBar").style.width = regPct + "%";
+
+  const hasMaster = cards.some(c => masterRarities.includes(c.rarity));
+  const masterBox = document.getElementById("masterContainer");
+
+  if (!hasMaster) {
+    masterBox.style.display = "none";
+    return;
+  }
+
+  const totalMaster = cards.length;
+  const ownedMaster = uniqueOwned.length;
+  const masPct = Math.floor((ownedMaster / totalMaster) * 100);
+
+  document.getElementById("masterLabel").textContent =
+    `Master: ${ownedMaster}/${totalMaster} (${masPct}%)`;
+  document.getElementById("masterBar").style.width = masPct + "%";
 }
 
 /* ---------- STATS ---------- */
@@ -172,15 +200,11 @@ function updateStats() {
   const statsDiv = document.getElementById("stats");
   let html = `<h3>Packs: ${stats.packsOpened}</h3>
               <h3>Total Cards: ${stats.totalCards}</h3><ul>`;
-  rarityOrder.forEach(r => {
-    html += `<li>${r}: ${stats.rarities[r] || 0}</li>`;
+  Object.entries(stats.rarities).forEach(([r, c]) => {
+    html += `<li>${r}: ${c}</li>`;
   });
   html += "</ul>";
   statsDiv.innerHTML = html;
-}
-
-function saveStats() {
-  localStorage.setItem("packStats", JSON.stringify(stats));
 }
 
 /* ---------- NAV ---------- */
@@ -196,4 +220,5 @@ document.getElementById("resetData").onclick = () => {
   collection = {};
   renderCollection();
   updateStats();
+  updateCompletion();
 };
