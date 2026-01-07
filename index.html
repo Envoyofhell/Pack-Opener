@@ -21,42 +21,51 @@
 
 <!-- ===== MAIN APP ===== -->
 <div id="app" class="hidden">
-  <div id="loading" style="display:none;">Loading set...</div>
-  
+
+  <!-- ===== PACK OPENING ===== -->
   <div id="pack-container">
     <button id="openPack" disabled>Open Pack</button>
     <div id="pack"></div>
-    <div id="underPackControls" class="hidden">
+    <div id="underPackControls">
       <button id="backToStart">Back to Start</button>
       <button id="resetData">Reset All Data</button>
     </div>
   </div>
 
-  <!-- ===== COLLECTION + STATS ===== -->
+  <!-- ===== COLLECTION & STATS ===== -->
   <div id="collection-stats-container">
-    <h2>Collection</h2>
-    <label>Filter by Rarity: 
-      <select id="rarityFilter"></select>
-    </label>
-    <div id="collection"></div>
 
-    <h2>Stats & Completion</h2>
-    <div id="stats"></div>
-    <div id="completion">
-      <div id="regularContainer">
-        <div id="regularLabel"></div>
-        <div style="background:#333;height:12px;border-radius:6px;overflow:hidden">
-          <div id="regularBar" style="background:#3b82f6;height:12px;width:0%"></div>
+    <!-- Collection -->
+    <div id="collection-container">
+      <h2>Collection</h2>
+      <label>Filter by Rarity: 
+        <select id="rarityFilter"></select>
+      </label>
+      <div id="collection"></div>
+    </div>
+
+    <!-- Stats & Completion -->
+    <div id="stats-container">
+      <h2>Stats & Completion</h2>
+      <div id="stats"></div>
+      <div id="completion">
+        <div id="regularContainer">
+          <div id="regularLabel"></div>
+          <div style="background:#333;height:12px;border-radius:6px;overflow:hidden">
+            <div id="regularBar" style="background:#3b82f6;height:12px;width:0%"></div>
+          </div>
         </div>
-      </div>
-      <div id="masterContainer">
-        <div id="masterLabel"></div>
-        <div style="background:#333;height:12px;border-radius:6px;overflow:hidden">
-          <div id="masterBar" style="background:#f59e0b;height:12px;width:0%"></div>
+        <div id="masterContainer">
+          <div id="masterLabel"></div>
+          <div style="background:#333;height:12px;border-radius:6px;overflow:hidden">
+            <div id="masterBar" style="background:#f59e0b;height:12px;width:0%"></div>
+          </div>
         </div>
       </div>
     </div>
+
   </div>
+
 </div>
 
 <script src="script.js"></script>
