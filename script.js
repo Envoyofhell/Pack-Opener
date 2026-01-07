@@ -3,7 +3,7 @@ let availableRarities = {};
 let collection = JSON.parse(localStorage.getItem("collection")) || {};
 let currentSetName = "";
 
-/* ---------- START / NAV ---------- */
+/* ---------- START ---------- */
 function goToStart() {
   document.getElementById("app").classList.add("hidden");
   document.getElementById("start-screen").classList.remove("hidden");
@@ -14,7 +14,7 @@ function enterApp() {
   document.getElementById("app").classList.remove("hidden");
 }
 
-/* ---------- LOAD SET ---------- */
+/* ---------- LOAD ---------- */
 function loadPredefinedSet(name) {
   currentSetName = name;
   fetch(`sets/${name}.json`)
@@ -23,11 +23,9 @@ function loadPredefinedSet(name) {
 }
 
 document.getElementById("jsonInput").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => initSet(JSON.parse(ev.target.result).data);
-  reader.readAsText(file);
+  reader.readAsText(e.target.files[0]);
 });
 
 function initSet(data) {
@@ -35,7 +33,6 @@ function initSet(data) {
   buildRarities();
   buildFilter();
   document.getElementById("openPack").disabled = false;
-  document.getElementById("loading").style.display = "none";
   enterApp();
   renderCollection();
   updateCompletion();
@@ -55,69 +52,61 @@ function randomFrom(arr) {
 }
 
 function pullWeighted(table) {
-  const filtered = table.filter(e => availableRarities[e.rarity]?.length);
-  const total = filtered.reduce((s,e) => s + e.weight, 0);
+  const filtered = table.filter(e => availableRarities[e.rarity]);
+  let total = filtered.reduce((s,e) => s + e.weight, 0);
   let roll = Math.random() * total;
   for (let e of filtered) {
     if (roll < e.weight) return randomFrom(availableRarities[e.rarity]);
     roll -= e.weight;
   }
-  return randomFrom(cards);
+}
+
+/* ---------- GOD PACK ---------- */
+function isGodPack() {
+  return Math.random() < 0.0008; // ~1 in 1250
 }
 
 /* ---------- OPEN PACK ---------- */
 function openPack() {
   const pack = document.getElementById("pack");
   pack.innerHTML = "";
+
   const pulls = [];
+  const god = isGodPack();
 
-  // Slots 1–7
-  for (let i = 0; i < 7; i++) pulls.push(randomFrom(cards));
-
-  // Slot 8
-  pulls.push(pullWeighted([
-    { rarity: "Common", weight: 55 },
-    { rarity: "Uncommon", weight: 32 },
-    { rarity: "Rare", weight: 11 },
-    { rarity: "Illustration Rare", weight: 1.5 },
-    { rarity: "Special Illustration Rare", weight: 0.4 },
-    { rarity: "Hyper Rare", weight: 0.1 }
-  ]));
-
-  // Slot 9
-  pulls.push(pullWeighted([
-    { rarity: "Common", weight: 35 },
-    { rarity: "Uncommon", weight: 43 },
-    { rarity: "Rare", weight: 18 },
-    { rarity: "Illustration Rare", weight: 12 },
-    { rarity: "Special Illustration Rare", weight: 2.3 },
-    { rarity: "Hyper Rare", weight: 0.7 }
-  ]));
-
-  // Slot 10
-  pulls.push(pullWeighted([
-    { rarity: "Rare", weight: 72 },
-    { rarity: "Double Rare", weight: 21 },
-    { rarity: "Ultra Rare", weight: 6 },
-    { rarity: "Special Illustration Rare", weight: 1.5 },
-    { rarity: "Hyper Rare", weight: 0.8 }
-  ]));
+  for (let i = 0; i < 10; i++) {
+    pulls.push(
+      god
+        ? pullWeighted([{ rarity: "Illustration Rare", weight: 1 }])
+        : randomFrom(cards)
+    );
+  }
 
   pulls.forEach((card, i) => {
     const key = `${card.name}_${card.number}`;
     if (!collection[key]) collection[key] = { ...card, count: 0 };
     collection[key].count++;
 
-    const div = document.createElement("div");
     const rarityClass = card.rarity.replace(/\s+/g, "-");
-    div.className = `card rarity-${rarityClass}`;
-    div.innerHTML = `<img src="${card.image}">`;
-    pack.appendChild(div);
+
+    const cardDiv = document.createElement("div");
+    cardDiv.className = `card rarity-${rarityClass}`;
+
+    cardDiv.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-back"></div>
+        <div class="card-face card-front">
+          <img src="${card.image}">
+        </div>
+      </div>
+    `;
+
+    pack.appendChild(cardDiv);
 
     setTimeout(() => {
-      div.classList.add("show");
-      if (i >= 7) div.classList.add("reveal-hit"); // slots 8–10
-    }, i * 180);
+      cardDiv.classList.add("flipped");
+      if (i >= 7) cardDiv.classList.add("reveal-hit");
+    }, i * 200);
   });
 
   saveCollection();
@@ -134,23 +123,23 @@ function renderCollection() {
   Object.values(collection)
     .filter(c => filter === "ALL" || c.rarity === filter)
     .forEach(card => {
-      const div = document.createElement("div");
       const r = card.rarity.replace(/\s+/g, "-");
-      div.className = `card show rarity-${r}`;
-      div.innerHTML = `<img src="${card.image}"><div>${card.name} ×${card.count}</div>`;
-      col.appendChild(div);
+      const d = document.createElement("div");
+      d.className = `card show rarity-${r}`;
+      d.innerHTML = `<img src="${card.image}"><div>${card.name} ×${card.count}</div>`;
+      col.appendChild(d);
     });
 }
 
 /* ---------- FILTER ---------- */
 function buildFilter() {
-  const select = document.getElementById("rarityFilter");
-  select.innerHTML = `<option value="ALL">All</option>`;
+  const s = document.getElementById("rarityFilter");
+  s.innerHTML = `<option value="ALL">All</option>`;
   Object.keys(availableRarities).forEach(r => {
     const o = document.createElement("option");
     o.value = r;
     o.textContent = r;
-    select.appendChild(o);
+    s.appendChild(o);
   });
 }
 document.getElementById("rarityFilter").onchange = renderCollection;
@@ -159,8 +148,13 @@ document.getElementById("rarityFilter").onchange = renderCollection;
 function updateCompletion() {
   const total = cards.length;
   const owned = Object.keys(collection).length;
-  document.getElementById("completion").innerHTML =
-    `<h3>${currentSetName}</h3><p>Completion: ${owned}/${total}</p>`;
+  const percent = Math.floor((owned / total) * 100);
+
+  document.getElementById("completion").innerHTML = `
+    <h3>${currentSetName}</h3>
+    <div class="progress"><div class="progress-bar" style="width:${percent}%"></div></div>
+    <p>${owned}/${total} (${percent}%)</p>
+  `;
 }
 
 /* ---------- STORAGE ---------- */
