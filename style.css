@@ -71,3 +71,28 @@ button:disabled {
 .rarity-Special-Illustration-Rare { box-shadow:0 0 18px rgba(255,180,50,1),0 0 45px rgba(255,120,0,0.7); }
 .rarity-Hyper-Rare { animation: rainbowGlow 3s linear infinite; }
 @keyframes rainbowGlow { 0%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}25%{box-shadow:0 0 18px #00ff00,0 0 35px #00ff00;}50%{box-shadow:0 0 18px #00ffff,0 0 35px #00ffff;}75%{box-shadow:0 0 18px #ff00ff,0 0 35px #ff00ff;}100%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}}
+
+/* ---------- PROGRESS BARS ---------- */
+#progressBars {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.progress-container {
+  width: 200px;
+  height: 14px;
+  background: #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+}
