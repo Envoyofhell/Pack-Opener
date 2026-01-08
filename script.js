@@ -37,7 +37,7 @@ function updateStatsDisplay(){
 
 function renderCollection(){
   collectionDiv.innerHTML="";
-  const arr=Object.values(collection);
+  const arr = Object.values(collection);
   arr.sort((a,b)=>{
     const ma=a.number.match(/^(\d+)([a-z]?)$/i);
     const mb=b.number.match(/^(\d+)([a-z]?)$/i);
@@ -50,7 +50,7 @@ function renderCollection(){
   });
   arr.forEach(c=>{
     const div=document.createElement("div");
-    div.className=`card show rarity-${c.rarity.replace(/\s+/g,'-')}`;
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')} show`; // add show to make collection visible
     div.innerHTML=`<img src="${c.image}"><div>${c.name} ×${c.count}</div>`;
     collectionDiv.appendChild(div);
   });
@@ -110,30 +110,12 @@ function openPack(){
 
   saveCollection(); renderCollection(); saveStats(); updateStatsDisplay();
 
-  // ----- NEW: Last 3 cards revealed on click, glowing already -----
   pulls.forEach((c,i)=>{
     const div=document.createElement("div");
-    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
-    
-    if(i >= pulls.length-3){
-      // Last three: show glow, hide image
-      div.classList.add("last-three-card");
-      div.innerHTML=`<img src="${c.image}" style="display:none;" alt="${c.name}">`;
-      
-      // Click to reveal
-      div.addEventListener("click", ()=>{
-        const img = div.querySelector("img");
-        if(img.style.display === "none"){
-          img.style.display = "block";
-          div.classList.add("show");
-        }
-      });
-    } else {
-      div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
-      setTimeout(()=>div.classList.add("show"), i*350);
-    }
-
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')} show`;
+    div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
     packDiv.appendChild(div);
+    if(i<pulls.length-3) setTimeout(()=>div.classList.add("show"), i*350);
   });
 }
 
@@ -156,7 +138,12 @@ jsonInput.onchange=(e)=>{
 };
 
 /* ---------------- NAVIGATION ---------------- */
-viewCollectionBtn.onclick=()=>{ openPackPage.classList.add("hidden"); collectionPage.classList.remove("hidden"); };
+viewCollectionBtn.onclick=()=>{
+  openPackPage.classList.add("hidden");
+  collectionPage.classList.remove("hidden");
+  renderCollection();      // <-- re-render collection when opening page
+  updateStatsDisplay();
+};
 backToOpenPackBtn.onclick=()=>{ collectionPage.classList.add("hidden"); openPackPage.classList.remove("hidden"); };
 backToStartBtn.onclick=()=>{ openPackPage.classList.add("hidden"); startScreen.classList.remove("hidden"); };
 openPackBtn.onclick=openPack;
