@@ -112,7 +112,7 @@ function weightedRoll(table){ const f=table.filter(e=>getByRarity(e.rarity).leng
 function pullWeighted(table){ const r=weightedRoll(table); return randomFrom(getByRarity(r))||randomFrom(cards); }
 
 /* ---------------- OPEN PACK ---------------- */
-function openPack(){
+function openPack() {
   if(!cards.length){ alert("Set not loaded"); return; }
   packDiv.innerHTML="";
 
@@ -159,19 +159,25 @@ function openPack(){
             div.querySelector("img").style.visibility = "visible";
             div.removeEventListener("click", reveal);
           });
-        }, 1000); // 1 second after the first 7 cards
-      }, (pulls.length - 3) * 350 + 400); // slightly after previous cards
+        }, 1000); // glow 1 sec after first 7 cards
+      }, (pulls.length - 3) * 350 + 400);
     }
   });
 }
 
 /* ---------------- START SCREEN ---------------- */
-["Z-Genesis_Melemele","Soaring_Titans"].forEach(s=>{
-  const btn=document.createElement("button");
-  btn.textContent=s;
-  btn.onclick=()=>loadSet(`sets/${s}.json`);
-  availableSetsDiv.appendChild(btn);
-});
+// This runs **once**, on page load
+function initStartScreen() {
+  ["Z-Genesis_Melemele","Soaring_Titans"].forEach(s=>{
+    const btn=document.createElement("button");
+    btn.textContent=s;
+    btn.onclick=()=>loadSet(`sets/${s}.json`);
+    availableSetsDiv.appendChild(btn);
+  });
+}
+
+// Initialize once
+initStartScreen();
 
 /* ---------------- IMPORT ---------------- */
 importSetBtn.onclick=()=>jsonInput.click();
