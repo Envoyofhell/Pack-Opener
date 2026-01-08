@@ -39,10 +39,15 @@ function updateStatsDisplay(){
   // Compute completion percentages
 const totalCards = cards.length;
 const collectedCards = Object.values(collection).reduce((sum, c) => sum + (c.count > 0 ? 1 : 0), 0);
-const regularMax = cards.filter(c => c.rarity !== "Double Rare").length; // Regular set
-const regularCollected = Object.values(collection).filter(c => (c.count > 0 && c.rarity !== "Double Rare")).length;
+
+// Regular set excludes Double Rare
+const regularMax = cards.filter(c => c.rarity !== "Double Rare").length;
+const regularCollected = Object.values(collection).filter(c => c.count > 0 && c.rarity !== "Double Rare").length;
+
+// Master set includes all cards
 const masterCollected = collectedCards;
 
+// Update the progress bars
 document.getElementById("regularProgress").value = (regularCollected / regularMax) * 100;
 document.getElementById("masterProgress").value = (masterCollected / totalCards) * 100;
 
