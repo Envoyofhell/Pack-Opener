@@ -1,4 +1,4 @@
-  let cards = [];
+let cards = [];
 let availableRarities = {};
 
 let stats = JSON.parse(localStorage.getItem("packStats")) || {
