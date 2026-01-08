@@ -32,34 +32,7 @@ function updateStatsDisplay(){
   ["Common","Uncommon","Rare","Double Rare","Illustration Rare","Ultra Rare","Special Illustration Rare","Hyper Rare"]
     .forEach(r=>html+=`<li>${r}: ${stats.rarities[r]||0}</li>`);
   html+="</ul>";
-
-  html += buildProgressBars();
   statsDiv.innerHTML=html;
-}
-
-/* ---------------- PROGRESS BARS (ADDED) ---------------- */
-function buildProgressBars(){
-  if(!cards.length) return "";
-
-  const totalCardsInSet = cards.length;
-  const ownedCards = Object.keys(collection).length;
-
-  const regularRarities = ["Common","Uncommon","Rare","Double Rare"];
-  const regularSetCards = cards.filter(c=>regularRarities.includes(c.rarity)).length;
-  const ownedRegular = Object.values(collection)
-    .filter(c=>regularRarities.includes(c.rarity)).length;
-
-  const regPct = Math.min(100, Math.round((ownedRegular/regularSetCards)*100));
-  const masterPct = Math.min(100, Math.round((ownedCards/totalCardsInSet)*100));
-
-  return `
-    <div class="progress-block">
-      <div>Regular Set: ${ownedRegular}/${regularSetCards}</div>
-      <div class="progress"><div style="width:${regPct}%"></div></div>
-      <div>Master Set: ${ownedCards}/${totalCardsInSet}</div>
-      <div class="progress"><div style="width:${masterPct}%"></div></div>
-    </div>
-  `;
 }
 
 function renderCollection(){
@@ -189,9 +162,22 @@ jsonInput.onchange=e=>{
 };
 
 /* ---------------- NAV ---------------- */
-viewCollectionBtn.onclick=()=>{ openPackPage.classList.add("hidden"); collectionPage.classList.remove("hidden"); };
-backToOpenPackBtn.onclick=()=>{ collectionPage.classList.add("hidden"); openPackPage.classList.remove("hidden"); };
-backToStartBtn.onclick=()=>{ openPackPage.classList.add("hidden"); startScreen.classList.remove("hidden"); };
+viewCollectionBtn.onclick=()=>{
+  openPackPage.classList.add("hidden");
+  collectionPage.classList.remove("hidden");
+  renderCollection(); // ✅ FIX: force render when opening collection
+};
+
+backToOpenPackBtn.onclick=()=>{ 
+  collectionPage.classList.add("hidden"); 
+  openPackPage.classList.remove("hidden"); 
+};
+
+backToStartBtn.onclick=()=>{ 
+  openPackPage.classList.add("hidden"); 
+  startScreen.classList.remove("hidden"); 
+};
+
 openPackBtn.onclick=openPack;
 
 /* ---------------- RESET ---------------- */
