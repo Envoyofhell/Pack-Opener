@@ -49,11 +49,17 @@ button:disabled {
   transform: translateY(30px) scale(0.95);
   transition: opacity 0.45s ease, transform 0.45s cubic-bezier(.25,.8,.25,1);
   text-align: center;
+  cursor: pointer;
 }
 
 .card.show { opacity: 1; transform: translateY(0) scale(1); }
 .card img { width: 100%; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 .card div { margin-top: 6px; font-size: 14px; opacity: 0.85; }
+
+/* Last 3 pack cards: glow visible before click */
+.last-three-hidden {
+  opacity: 0.6 !important; /* partially visible */
+}
 
 /* ---------- STATS ---------- */
 #stats { margin-top: 25px; background: rgba(20,20,20,0.85); padding:16px 22px; border-radius:12px; display:inline-block; text-align:left; box-shadow:0 6px 20px rgba(0,0,0,0.6);}
@@ -70,29 +76,11 @@ button:disabled {
 .rarity-Ultra-Rare { box-shadow: 0 0 16px rgba(236,72,153,0.9),0 0 40px rgba(236,72,153,0.6); }
 .rarity-Special-Illustration-Rare { box-shadow:0 0 18px rgba(255,180,50,1),0 0 45px rgba(255,120,0,0.7); }
 .rarity-Hyper-Rare { animation: rainbowGlow 3s linear infinite; }
-@keyframes rainbowGlow { 0%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}25%{box-shadow:0 0 18px #00ff00,0 0 35px #00ff00;}50%{box-shadow:0 0 18px #00ffff,0 0 35px #00ffff;}75%{box-shadow:0 0 18px #ff00ff,0 0 35px #ff00ff;}100%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}}
 
-/* ---------- PROGRESS BARS ---------- */
-#progressBars {
-  margin: 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-}
-
-.progress-container {
-  width: 200px;
-  height: 14px;
-  background: #333;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
-  border-radius: 8px;
-  transition: width 0.5s ease;
+@keyframes rainbowGlow {
+  0%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}
+  25%{box-shadow:0 0 18px #00ff00,0 0 35px #00ff00;}
+  50%{box-shadow:0 0 18px #00ffff,0 0 35px #00ffff;}
+  75%{box-shadow:0 0 18px #ff00ff,0 0 35px #ff00ff;}
+  100%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}
 }
