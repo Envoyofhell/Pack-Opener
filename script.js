@@ -216,3 +216,4 @@ openPackPage.classList.add("hidden");
 collectionPage.classList.add("hidden");
 updateStatsDisplay();
 renderCollection();
+
