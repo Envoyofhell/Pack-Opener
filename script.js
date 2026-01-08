@@ -1,30 +1,26 @@
-let cards=[], availableRarities={};
-let stats=JSON.parse(localStorage.getItem("packStats"))||{packsOpened:0,totalCards:0,rarities:{}};
-let collection=JSON.parse(localStorage.getItem("collection"))||{};
+let cards = [], availableRarities = {};
+let stats = JSON.parse(localStorage.getItem("packStats")) || { packsOpened:0,totalCards:0,rarities:{} };
+let collection = JSON.parse(localStorage.getItem("collection")) || {};
 
 // DOM elements
-const startScreen=document.getElementById("startScreen");
-const openPackPage=document.getElementById("openPackPage");
-const collectionPage=document.getElementById("collectionPage");
+const startScreen = document.getElementById("startScreen");
+const openPackPage = document.getElementById("openPackPage");
+const collectionPage = document.getElementById("collectionPage");
 
-const openPackBtn=document.getElementById("openPack");
-const viewCollectionBtn=document.getElementById("viewCollection");
-const backToStartBtn=document.getElementById("backToStart");
-const backToOpenPackBtn=document.getElementById("backToOpenPack");
-const resetBtn=document.getElementById("resetData");
+const openPackBtn = document.getElementById("openPack");
+const viewCollectionBtn = document.getElementById("viewCollection");
+const backToStartBtn = document.getElementById("backToStart");
+const backToOpenPackBtn = document.getElementById("backToOpenPack");
+const resetBtn = document.getElementById("resetData");
 
-const packDiv=document.getElementById("pack");
-const collectionDiv=document.getElementById("collection");
-const statsDiv=document.getElementById("stats");
-const loadingDiv=document.getElementById("loading");
+const packDiv = document.getElementById("pack");
+const collectionDiv = document.getElementById("collection");
+const statsDiv = document.getElementById("stats");
+const loadingDiv = document.getElementById("loading");
 
-const availableSetsDiv=document.getElementById("availableSets");
-const importSetBtn=document.getElementById("importSet");
-const jsonInput=document.getElementById("jsonInput");
-
-const rarityFilter=document.getElementById("rarityFilter");
-const regularProgress=document.getElementById("regularProgress");
-const masterProgress=document.getElementById("masterProgress");
+const availableSetsDiv = document.getElementById("availableSets");
+const importSetBtn = document.getElementById("importSet");
+const jsonInput = document.getElementById("jsonInput");
 
 /* ---------------- STATS & COLLECTION ---------------- */
 function saveStats(){ localStorage.setItem("packStats",JSON.stringify(stats)); }
@@ -37,41 +33,11 @@ function updateStatsDisplay(){
     .forEach(r=>html+=`<li>${r}: ${stats.rarities[r]||0}</li>`);
   html+="</ul>";
   statsDiv.innerHTML=html;
-
-  updateProgressBars();
 }
 
-/* ---------------- PROGRESS BARS ---------------- */
-function updateProgressBars(){
-  const allCards=cards.length;
-  const collectedCount=Object.keys(collection).length;
-  let regularCount=0;
-  let masterCount=0;
-
-  cards.forEach(c=>{
-    const key=`${c.name}_${c.number}`;
-    if(collection[key]) masterCount++;
-    if(["Common","Uncommon","Rare","Double Rare"].includes(c.rarity) && collection[key]) regularCount++;
-  });
-
-  regularProgress.style.width=`${(regularCount/Math.max(1,cards.filter(c=>["Common","Uncommon","Rare","Double Rare"].includes(c.rarity)).length)*100).toFixed(1)}%`;
-  masterProgress.style.width=`${(masterCount/allCards*100).toFixed(1)}%`;
-}
-
-/* ---------------- COLLECTION RENDER ---------------- */
 function renderCollection(){
   collectionDiv.innerHTML="";
-  const filter=rarityFilter.value; // get current filter
-  const arr=Object.values(collection).filter(c=>{
-    if(filter==="all") return true;
-    return c.rarity.replace(/\s+/g,'-')===filter;
-  });
-
-  if(arr.length===0){
-    collectionDiv.innerHTML="<p>No cards match this filter.</p>";
-    return;
-  }
-
+  const arr=Object.values(collection);
   arr.sort((a,b)=>{
     const ma=a.number.match(/^(\d+)([a-z]?)$/i);
     const mb=b.number.match(/^(\d+)([a-z]?)$/i);
@@ -82,15 +48,13 @@ function renderCollection(){
     if(la>lb) return 1;
     return 0;
   });
-
   arr.forEach(c=>{
     const div=document.createElement("div");
-    div.className=`card show rarity-${c.rarity.replace(/\s+/g,'-')}`;
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
     div.innerHTML=`<img src="${c.image}"><div>${c.name} ×${c.count}</div>`;
     collectionDiv.appendChild(div);
   });
 }
-
 
 /* ---------------- LOAD SET ---------------- */
 function buildAvailableRarities(){
@@ -102,20 +66,22 @@ function loadSet(fileOrJSON){
   loadingDiv.style.display="block";
   if(typeof fileOrJSON==="string"){
     fetch(fileOrJSON).then(r=>r.json()).then(j=>{
-      cards=j.data; buildAvailableRarities();
+      cards=j.data;
+      buildAvailableRarities();
       loadingDiv.style.display="none";
       openPackBtn.disabled=false;
-      startScreen.classList.add("hidden"); openPackPage.classList.remove("hidden");
-      updateStatsDisplay(); renderCollection();
+      startScreen.classList.add("hidden");
+      openPackPage.classList.remove("hidden");
     });
   } else {
     try{
       const j=JSON.parse(fileOrJSON);
-      cards=j.data; buildAvailableRarities();
+      cards=j.data;
+      buildAvailableRarities();
       loadingDiv.style.display="none";
       openPackBtn.disabled=false;
-      startScreen.classList.add("hidden"); openPackPage.classList.remove("hidden");
-      updateStatsDisplay(); renderCollection();
+      startScreen.classList.add("hidden");
+      openPackPage.classList.remove("hidden");
     }catch{ alert("Invalid JSON"); }
   }
 }
@@ -144,23 +110,32 @@ function openPack(){
 
   saveCollection(); renderCollection(); saveStats(); updateStatsDisplay();
 
+  // ----- NEW: Last 3 cards revealed on click, glowing already -----
   pulls.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
-    if(i>=pulls.length-3) div.classList.add("last-three-hidden");
-    div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
+    
+    if(i >= pulls.length-3){
+      // Last three: show glow, hide image
+      div.classList.add("last-three-card");
+      div.innerHTML=`<img src="${c.image}" style="display:none;" alt="${c.name}">`;
+      
+      // Click to reveal
+      div.addEventListener("click", ()=>{
+        const img = div.querySelector("img");
+        if(img.style.display === "none"){
+          img.style.display = "block";
+          div.classList.add("show");
+        }
+      });
+    } else {
+      div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
+      setTimeout(()=>div.classList.add("show"), i*350);
+    }
+
     packDiv.appendChild(div);
-    if(i<pulls.length-3) setTimeout(()=>div.classList.add("show"), i*350);
   });
 }
-
-/* Reveal last 3 cards on click */
-packDiv.addEventListener("click", function revealLastThree(){
-  const lastThree=packDiv.querySelectorAll(".last-three-hidden");
-  lastThree.forEach(div=>div.classList.add("show"));
-  lastThree.forEach(div=>div.classList.remove("last-three-hidden"));
-  packDiv.removeEventListener("click", revealLastThree);
-});
 
 /* ---------------- START SCREEN ---------------- */
 ["Z-Genesis_Melemele","Soaring_Titans"].forEach(s=>{
@@ -181,7 +156,7 @@ jsonInput.onchange=(e)=>{
 };
 
 /* ---------------- NAVIGATION ---------------- */
-viewCollectionBtn.onclick=()=>{ openPackPage.classList.add("hidden"); collectionPage.classList.remove("hidden"); renderCollection(); };
+viewCollectionBtn.onclick=()=>{ openPackPage.classList.add("hidden"); collectionPage.classList.remove("hidden"); };
 backToOpenPackBtn.onclick=()=>{ collectionPage.classList.add("hidden"); openPackPage.classList.remove("hidden"); };
 backToStartBtn.onclick=()=>{ openPackPage.classList.add("hidden"); startScreen.classList.remove("hidden"); };
 openPackBtn.onclick=openPack;
@@ -196,9 +171,6 @@ resetBtn.onclick=()=>{
   updateStatsDisplay();
   renderCollection();
 };
-
-/* ---------------- FILTER ---------------- */
-rarityFilter.onchange=()=>renderCollection();
 
 /* ---------------- INITIAL ---------------- */
 startScreen.classList.remove("hidden");
