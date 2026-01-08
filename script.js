@@ -129,22 +129,25 @@ function openPack(){
 
   saveCollection(); renderCollection(collectionFilter.value||null); saveStats(); updateStatsDisplay();
 
-  /* ------- 3 Last Cards -------- */
-  pulls.forEach((c, i) => {
-    const div = document.createElement("div");
-    div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
-    div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
+ /* ------- 3 Last Cards -------- */
+pulls.forEach((c, i) => {
+  const div = document.createElement("div");
+  div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
+  div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
 
-    if (i < pulls.length - 3) {
-      // First cards: normal reveal
-      setTimeout(() => div.classList.add("show"), i * 350);
+  if (i < pulls.length - 3) {
+    // First 7 cards: normal reveal
+    setTimeout(() => div.classList.add("show"), i * 350);
+    packDiv.appendChild(div);
+  } else {
+    // Last 3 cards: delay glow and click-to-reveal
+    setTimeout(() => {
       packDiv.appendChild(div);
-    } else {
-      // Last 3 cards: delay glow and click-to-reveal
+
+      // Delay glow start after first 7 cards are revealed
       setTimeout(() => {
-        div.classList.add("last-three-hidden"); // glow appears, image hidden
-        div.querySelector("img").style.visibility = "hidden"; // ensure image hidden
-        packDiv.appendChild(div);
+        div.classList.add("last-three-hidden"); // start glow
+        div.querySelector("img").style.visibility = "hidden"; // image hidden
 
         // Trigger reflow to make animation apply reliably
         void div.offsetWidth;
@@ -156,11 +159,11 @@ function openPack(){
           div.querySelector("img").style.visibility = "visible";
           div.removeEventListener("click", reveal);
         });
-      }, (pulls.length - 3) * 350 + 400); // slightly after previous cards
-    }
-
-    packDiv.appendChild(div);
-  });
+      }, 1000); // 1 second after the first 7 cards
+    }, (pulls.length - 3) * 350 + 400); // slightly after previous cards
+  }
+  
+  packDiv.appendChild(div);
 }
 
 /* ---------------- START SCREEN ---------------- */
