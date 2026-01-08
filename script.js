@@ -112,30 +112,34 @@ function openPack(){
 
   // ----- NEW: Last 3 cards revealed on click, glowing already -----
   pulls.forEach((c,i)=>{
-    const div=document.createElement("div");
-    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
-    
-    if(i >= pulls.length-3){
-      // Last three: show glow, hide image
-      div.classList.add("last-three-card");
-      div.innerHTML=`<img src="${c.image}" style="display:none;" alt="${c.name}">`;
-      
-      // Click to reveal
-      div.addEventListener("click", ()=>{
-        const img = div.querySelector("img");
-        if(img.style.display === "none"){
-          img.style.display = "block";
-          div.classList.add("show");
-        }
-      });
+    const div = document.createElement("div");
+    div.className = `card rarity-${c.rarity.replace(/\s+/g,'-')}`;
+
+    if(i >= pulls.length - 3){
+        // Last 3 cards
+        div.classList.add("show"); // glow shows immediately
+        div.classList.add("last-three-card");
+
+        const img = document.createElement("img");
+        img.src = c.image;
+        img.alt = c.name;
+        img.style.opacity = 0; // hidden initially
+        img.style.transition = "opacity 0.5s ease";
+
+        div.appendChild(img);
+
+        div.addEventListener("click", () => {
+            img.style.opacity = 1; // reveal image
+        });
+
     } else {
-      div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
-      setTimeout(()=>div.classList.add("show"), i*350);
+        // Regular cards
+        div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
+        setTimeout(()=>div.classList.add("show"), i*350);
     }
 
     packDiv.appendChild(div);
-  });
-}
+});
 
 /* ---------------- START SCREEN ---------------- */
 ["Z-Genesis_Melemele","Soaring_Titans"].forEach(s=>{
