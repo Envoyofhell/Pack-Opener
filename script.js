@@ -130,40 +130,39 @@ function openPack() {
   saveCollection(); renderCollection(collectionFilter.value||null); saveStats(); updateStatsDisplay();
 
   /* ------- 3 Last Cards -------- */
-  pulls.forEach((c, i) => {
-    const div = document.createElement("div");
-    div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
-    div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
+pulls.forEach((c, i) => {
+  const div = document.createElement("div");
+  div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
+  div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
 
-    if (i < pulls.length - 3) {
-      // First 7 cards: normal reveal
-      setTimeout(() => div.classList.add("show"), i * 350);
+  if (i < pulls.length - 3) {
+    // First 7 cards: normal reveal
+    setTimeout(() => div.classList.add("show"), i * 350);
+    packDiv.appendChild(div);
+  } else {
+    // Last 3 cards: delay placement, glow appears after first 7
+    setTimeout(() => {
       packDiv.appendChild(div);
-    } else {
-      // Last 3 cards: delay glow and click-to-reveal
+
+      // Start glow after first 7 cards are revealed
       setTimeout(() => {
-        packDiv.appendChild(div);
+        div.classList.add("last-three-hidden");   // start glow
+        div.querySelector("img").style.visibility = "hidden"; // hide image
+        // Trigger reflow for animation
+        void div.offsetWidth;
 
-        // Delay glow start after first 7 cards are revealed
-        setTimeout(() => {
-          div.classList.add("last-three-hidden"); // start glow
-          div.querySelector("img").style.visibility = "hidden"; // image hidden
+        // Click to reveal the card
+        div.addEventListener("click", function reveal() {
+          div.classList.add("show");
+          div.classList.remove("last-three-hidden");
+          div.querySelector("img").style.visibility = "visible";
+          div.removeEventListener("click", reveal);
+        });
+      }, 1000); // glow starts 1 second after first 7 cards
 
-          // Trigger reflow to make animation apply reliably
-          void div.offsetWidth;
-
-          // Click to reveal
-          div.addEventListener("click", function reveal() {
-            div.classList.add("show");
-            div.classList.remove("last-three-hidden");
-            div.querySelector("img").style.visibility = "visible";
-            div.removeEventListener("click", reveal);
-          });
-        }, 1000); // glow 1 sec after first 7 cards
-      }, (pulls.length - 3) * 350 + 400);
-    }
-  });
-}
+    }, i * 350); // slight delay to keep spacing consistent
+  }
+});
 
 /* ---------------- START SCREEN ---------------- */
 // This runs **once**, on page load
