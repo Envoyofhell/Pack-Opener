@@ -61,11 +61,16 @@ function updateProgressBars(){
 /* ---------------- COLLECTION RENDER ---------------- */
 function renderCollection(){
   collectionDiv.innerHTML="";
-  const filter=rarityFilter.value;
+  const filter=rarityFilter.value; // get current filter
   const arr=Object.values(collection).filter(c=>{
     if(filter==="all") return true;
     return c.rarity.replace(/\s+/g,'-')===filter;
   });
+
+  if(arr.length===0){
+    collectionDiv.innerHTML="<p>No cards match this filter.</p>";
+    return;
+  }
 
   arr.sort((a,b)=>{
     const ma=a.number.match(/^(\d+)([a-z]?)$/i);
@@ -85,6 +90,7 @@ function renderCollection(){
     collectionDiv.appendChild(div);
   });
 }
+
 
 /* ---------------- LOAD SET ---------------- */
 function buildAvailableRarities(){
