@@ -37,25 +37,21 @@ function updateStatsDisplay(){
 
 function renderCollection(){
   collectionDiv.innerHTML="";
-  const arr = Object.values(collection);
-
-  // Sort by set number (handles 87a, 87b etc.)
+  const arr=Object.values(collection);
   arr.sort((a,b)=>{
-    const ma = a.number.match(/^(\d+)([a-z]?)$/i);
-    const mb = b.number.match(/^(\d+)([a-z]?)$/i);
-    const na = parseInt(ma[1]), nb = parseInt(mb[1]);
-    const la = ma[2]||'', lb = mb[2]||'';
+    const ma=a.number.match(/^(\d+)([a-z]?)$/i);
+    const mb=b.number.match(/^(\d+)([a-z]?)$/i);
+    const na=parseInt(ma[1]), nb=parseInt(mb[1]);
+    const la=ma[2]||'', lb=mb[2]||'';
     if(na!==nb) return na-nb;
     if(la<lb) return -1;
     if(la>lb) return 1;
     return 0;
   });
-
   arr.forEach(c=>{
-    const div = document.createElement("div");
-    const normalizedRarity = c.rarity.replace(/\s+/g,'-');
-    div.className = `card rarity-${normalizedRarity}`;
-    div.innerHTML = `<img src="${c.image}" alt="${c.name}"><div>${c.name} ×${c.count}</div>`;
+    const div=document.createElement("div");
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
+    div.innerHTML=`<img src="${c.image}"><div>${c.name} ×${c.count}</div>`;
     collectionDiv.appendChild(div);
   });
 }
@@ -93,13 +89,7 @@ function loadSet(fileOrJSON){
 /* ---------------- HELPERS ---------------- */
 function randomFrom(arr){ if(!arr||!arr.length) return null; return arr[Math.floor(Math.random()*arr.length)]; }
 function getByRarity(r){ return availableRarities[r]||[]; }
-function weightedRoll(table){ 
-  const f=table.filter(e=>getByRarity(e.rarity).length); 
-  if(!f.length) return null; 
-  let total=f.reduce((s,e)=>s+e.weight,0), roll=Math.random()*total; 
-  for(let e of f){ if(roll<e.weight) return e.rarity; roll-=e.weight;} 
-  return f[f.length-1].rarity; 
-}
+function weightedRoll(table){ const f=table.filter(e=>getByRarity(e.rarity).length); if(!f.length) return null; let total=f.reduce((s,e)=>s+e.weight,0),roll=Math.random()*total; for(let e of f){ if(roll<e.weight) return e.rarity; roll-=e.weight;} return f[f.length-1].rarity; }
 function pullWeighted(table){ const r=weightedRoll(table); return randomFrom(getByRarity(r))||randomFrom(cards); }
 
 /* ---------------- OPEN PACK ---------------- */
@@ -120,24 +110,30 @@ function openPack(){
 
   saveCollection(); renderCollection(); saveStats(); updateStatsDisplay();
 
-  // Render pack
+  // ----- NEW: Last 3 cards revealed on click, glowing already -----
   pulls.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
-    div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
-    packDiv.appendChild(div);
-
-    // Only the last 3 cards are click-to-reveal
-    if(i < pulls.length - 3){
-      div.classList.add("show");
-    } else {
-      div.classList.add("last-three-hidden"); // Already glowing, but not revealed
-      div.addEventListener("click", function reveal(){
-        div.classList.add("show");
-        div.classList.remove("last-three-hidden");
-        div.removeEventListener("click", reveal);
+    
+    if(i >= pulls.length-3){
+      // Last three: show glow, hide image
+      div.classList.add("last-three-card");
+      div.innerHTML=`<img src="${c.image}" style="display:none;" alt="${c.name}">`;
+      
+      // Click to reveal
+      div.addEventListener("click", ()=>{
+        const img = div.querySelector("img");
+        if(img.style.display === "none"){
+          img.style.display = "block";
+          div.classList.add("show");
+        }
       });
+    } else {
+      div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
+      setTimeout(()=>div.classList.add("show"), i*350);
     }
+
+    packDiv.appendChild(div);
   });
 }
 
