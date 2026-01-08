@@ -21,7 +21,8 @@ const loadingDiv = document.getElementById("loading");
 const availableSetsDiv = document.getElementById("availableSets");
 const importSetBtn = document.getElementById("importSet");
 const jsonInput = document.getElementById("jsonInput");
-const collectionFilter = document.getElementById("collectionFilter"); // optional: dropdown for filtering
+
+const collectionFilter = document.getElementById("collectionFilter");
 
 /* ---------------- STATS & COLLECTION ---------------- */
 function saveStats(){ localStorage.setItem("packStats",JSON.stringify(stats)); }
@@ -29,43 +30,17 @@ function saveCollection(){ localStorage.setItem("collection",JSON.stringify(coll
 
 function updateStatsDisplay(){
   let html=`<h3>Packs Opened: ${stats.packsOpened}</h3>
-            <h3>Total cards: ${stats.totalCards}</h3>
-            <div class="progress-container">
-              <div>Regular Set:</div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width:${getCollectionCompletion(false)}%"></div>
-              </div>
-            </div>
-            <div class="progress-container">
-              <div>Master Set:</div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width:${getCollectionCompletion(true)}%"></div>
-              </div>
-            </div>
-            <ul>`;
+            <h3>Total cards: ${stats.totalCards}</h3><ul>`;
   ["Common","Uncommon","Rare","Double Rare","Illustration Rare","Ultra Rare","Special Illustration Rare","Hyper Rare"]
     .forEach(r=>html+=`<li>${r}: ${stats.rarities[r]||0}</li>`);
   html+="</ul>";
   statsDiv.innerHTML=html;
 }
 
-// Completion calculation
-function getCollectionCompletion(master){
-  if(!cards.length) return 0;
-  const uniqueCards = master ? cards.length : cards.filter(c=>c.rarity!=="Double Rare").length;
-  let collected=0;
-  cards.forEach(c=>{
-    const key=`${c.name}_${c.number}`;
-    if(collection[key] && collection[key].count>0) collected++;
-  });
-  return Math.round(collected/uniqueCards*100);
-}
-
 function renderCollection(filterRarity=null){
   collectionDiv.innerHTML="";
-  let arr=Object.values(collection);
-
-  if(filterRarity) arr = arr.filter(c=>c.rarity===filterRarity);
+  let arr = Object.values(collection);
+  if(filterRarity) arr = arr.filter(c => c.rarity === filterRarity);
 
   arr.sort((a,b)=>{
     const ma=a.number.match(/^(\d+)([a-z]?)$/i);
@@ -80,7 +55,7 @@ function renderCollection(filterRarity=null){
 
   arr.forEach(c=>{
     const div=document.createElement("div");
-    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')} show`; // add show for glow
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')} show`;
     div.innerHTML=`<img src="${c.image}"><div>${c.name} ×${c.count}</div>`;
     collectionDiv.appendChild(div);
   });
@@ -138,29 +113,28 @@ function openPack(){
   pulls.forEach(c=>stats.rarities[c.rarity]=(stats.rarities[c.rarity]||0)+1);
   pulls.forEach(c=>{ const key=`${c.name}_${c.number}`; if(!collection[key]) collection[key]={...c,count:0}; collection[key].count++; });
 
-  saveCollection(); renderCollection(); saveStats(); updateStatsDisplay();
+  saveCollection(); renderCollection(collectionFilter.value||null); saveStats(); updateStatsDisplay();
 
- pulls.forEach((c, i) => {
-  const div = document.createElement("div");
-  div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
-  div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
+  pulls.forEach((c,i)=>{
+    const div=document.createElement("div");
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
+    div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
 
-  if (i < pulls.length - 3) {
-    // First 7 cards: animate sequentially
-    setTimeout(() => div.classList.add("show"), i * 350);
-  } else {
-    // Last 3 cards: glowing but hidden
-    div.classList.add("last-three-hidden");
-    div.addEventListener("click", function reveal() {
-      div.classList.add("show");
-      div.classList.remove("last-three-hidden");
-      div.removeEventListener("click", reveal);
-    });
-  }
+    // Only last 3 cards are click-to-reveal
+    if(i < pulls.length - 3){
+      setTimeout(()=>div.classList.add("show"), i*350);
+    } else {
+      div.classList.add("last-three-hidden");
+      div.addEventListener("click", function reveal(){
+        div.classList.add("show");
+        div.classList.remove("last-three-hidden");
+        div.removeEventListener("click", reveal);
+      });
+    }
 
-  packDiv.appendChild(div);
-});
-
+    packDiv.appendChild(div);
+  });
+}
 
 /* ---------------- START SCREEN ---------------- */
 ["Z-Genesis_Melemele","Soaring_Titans"].forEach(s=>{
@@ -179,6 +153,11 @@ jsonInput.onchange=(e)=>{
   r.onload=ev=>{ loadSet(ev.target.result); };
   r.readAsText(f);
 };
+
+/* ---------------- COLLECTION FILTER ---------------- */
+collectionFilter.addEventListener("change", ()=>{
+  renderCollection(collectionFilter.value||null);
+});
 
 /* ---------------- NAVIGATION ---------------- */
 viewCollectionBtn.onclick=()=>{ openPackPage.classList.add("hidden"); collectionPage.classList.remove("hidden"); };
