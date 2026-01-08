@@ -49,10 +49,15 @@ button:disabled { background: #444; cursor: not-allowed; }
 .card div { margin-top: 6px; font-size: 14px; opacity: 0.85; }
 
 /* ---------- STATS ---------- */
-#stats { margin-top: 25px; background: rgba(20,20,20,0.85); padding:16px 22px; border-radius:12px; display:inline-block; text-align:left; box-shadow:0 6px 20px rgba(0,0,0,0.6);}
-#stats h3 { margin:6px 0; font-size:16px; }
-#stats ul { padding-left:18px; margin:10px 0 0; }
-#stats li { margin:4px 0; font-size:14px; opacity:0.9; }
+#stats {
+  margin-top: 25px;
+  background: rgba(20,20,20,0.85);
+  padding:16px 22px;
+  border-radius:12px;
+  display:inline-block;
+  text-align:left;
+  box-shadow:0 6px 20px rgba(0,0,0,0.6);
+}
 
 /* ---------- GLOW ---------- */
 .rarity-Common { box-shadow: 0 0 8px rgba(255,255,255,0.15); }
@@ -63,9 +68,15 @@ button:disabled { background: #444; cursor: not-allowed; }
 .rarity-Ultra-Rare { box-shadow: 0 0 16px rgba(236,72,153,0.9),0 0 40px rgba(236,72,153,0.6); }
 .rarity-Special-Illustration-Rare { box-shadow:0 0 18px rgba(255,180,50,1),0 0 45px rgba(255,120,0,0.7); }
 .rarity-Hyper-Rare { animation: rainbowGlow 3s linear infinite; }
-@keyframes rainbowGlow { 0%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}25%{box-shadow:0 0 18px #00ff00,0 0 35px #00ff00;}50%{box-shadow:0 0 18px #00ffff,0 0 35px #00ffff;}75%{box-shadow:0 0 18px #ff00ff,0 0 35px #ff00ff;}100%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}}
 
-/* ---------- LAST 3 CARDS HIGHLIGHT ---------- */
+@keyframes rainbowGlow {
+  0%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}
+  25%{box-shadow:0 0 18px #00ff00,0 0 35px #00ff00;}
+  50%{box-shadow:0 0 18px #00ffff,0 0 35px #00ffff;}
+  75%{box-shadow:0 0 18px #ff00ff,0 0 35px #ff00ff;}
+  100%{box-shadow:0 0 18px #ff0000,0 0 35px #ff0000;}
+}
+
 .last-three-hidden { opacity:0.6; cursor:pointer; }
 
 #progressBars {
@@ -73,7 +84,7 @@ button:disabled { background: #444; cursor: not-allowed; }
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 60%; /* smaller horizontal bar */
+  width: 60%;
   margin-left: auto;
   margin-right: auto;
   text-align: left;
