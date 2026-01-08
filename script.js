@@ -22,6 +22,10 @@ const availableSetsDiv = document.getElementById("availableSets");
 const importSetBtn = document.getElementById("importSet");
 const jsonInput = document.getElementById("jsonInput");
 
+const collectionFilter = document.getElementById("collectionFilter");
+const regularProgress = document.getElementById("regularProgress");
+const masterProgress = document.getElementById("masterProgress");
+
 /* ---------------- STATS & COLLECTION ---------------- */
 function saveStats(){ localStorage.setItem("packStats",JSON.stringify(stats)); }
 function saveCollection(){ localStorage.setItem("collection",JSON.stringify(collection)); }
@@ -35,7 +39,7 @@ function updateStatsDisplay(){
   statsDiv.innerHTML=html;
 }
 
-function renderCollection(){
+function renderCollection(filterValue="All"){
   collectionDiv.innerHTML="";
   const arr = Object.values(collection);
   arr.sort((a,b)=>{
@@ -48,12 +52,28 @@ function renderCollection(){
     if(la>lb) return 1;
     return 0;
   });
+
   arr.forEach(c=>{
+    if(filterValue!=="All" && c.rarity!==filterValue) return;
     const div=document.createElement("div");
-    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')} show`; // add show to make collection visible
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')} show`;
     div.innerHTML=`<img src="${c.image}"><div>${c.name} ×${c.count}</div>`;
     collectionDiv.appendChild(div);
   });
+
+  updateProgressBars();
+}
+
+function updateProgressBars(){
+  const totalRegular = cards.filter(c=>c.rarity!=="Double Rare").length;
+  const totalMaster = cards.length;
+  const owned = Object.values(collection);
+
+  const regularOwned = owned.filter(c=>c.rarity!=="Double Rare").length;
+  const masterOwned = owned.length;
+
+  if(regularProgress) regularProgress.value = (regularOwned/totalRegular)*100;
+  if(masterProgress) masterProgress.value = (masterOwned/totalMaster)*100;
 }
 
 /* ---------------- LOAD SET ---------------- */
@@ -72,6 +92,7 @@ function loadSet(fileOrJSON){
       openPackBtn.disabled=false;
       startScreen.classList.add("hidden");
       openPackPage.classList.remove("hidden");
+      renderCollection();
     });
   } else {
     try{
@@ -82,6 +103,7 @@ function loadSet(fileOrJSON){
       openPackBtn.disabled=false;
       startScreen.classList.add("hidden");
       openPackPage.classList.remove("hidden");
+      renderCollection();
     }catch{ alert("Invalid JSON"); }
   }
 }
@@ -112,10 +134,22 @@ function openPack(){
 
   pulls.forEach((c,i)=>{
     const div=document.createElement("div");
-    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')} show`;
+    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
     div.innerHTML=`<img src="${c.image}" alt="${c.name}">`;
+
+    // Only the last 3 cards are click-to-reveal
+    if(i < pulls.length - 3){
+      div.classList.add("show");
+    } else {
+      div.classList.add("last-three-hidden");
+      div.addEventListener("click", function reveal(){
+        div.classList.add("show");
+        div.classList.remove("last-three-hidden");
+        div.removeEventListener("click", reveal);
+      });
+    }
+
     packDiv.appendChild(div);
-    if(i<pulls.length-3) setTimeout(()=>div.classList.add("show"), i*350);
   });
 }
 
@@ -137,11 +171,16 @@ jsonInput.onchange=(e)=>{
   r.readAsText(f);
 };
 
+/* ---------------- COLLECTION FILTER ---------------- */
+if(collectionFilter){
+  collectionFilter.onchange=()=>renderCollection(collectionFilter.value);
+}
+
 /* ---------------- NAVIGATION ---------------- */
 viewCollectionBtn.onclick=()=>{
   openPackPage.classList.add("hidden");
   collectionPage.classList.remove("hidden");
-  renderCollection();      // <-- re-render collection when opening page
+  renderCollection(collectionFilter?collectionFilter.value:"All");      
   updateStatsDisplay();
 };
 backToOpenPackBtn.onclick=()=>{ collectionPage.classList.add("hidden"); openPackPage.classList.remove("hidden"); };
