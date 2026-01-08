@@ -50,7 +50,7 @@ function renderCollection(){
 
   arr.forEach(c=>{
     const div=document.createElement("div");
-    div.className=`card rarity-${c.rarity.replace(/\s+/g,'-')}`;
+    div.className=`card show rarity-${c.rarity.replace(/\s+/g,'-')}`;
     div.innerHTML=`<img src="${c.image}"><div>${c.name} ×${c.count}</div>`;
     collectionDiv.appendChild(div);
   });
