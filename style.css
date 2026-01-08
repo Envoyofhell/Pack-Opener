@@ -127,21 +127,19 @@ progress::-webkit-progress-value {
   border-radius: 8px;
 }
 
-/* Last 3 cards glow animation */
-.last-three-hidden {
-  animation: glowPulse 2s ease-in-out infinite;
-  cursor: pointer;
-}
-
+/* Pulsing glow animation for last 3 cards */
 @keyframes glowPulse {
   0% { filter: brightness(1); }
   50% { filter: brightness(1.35); }
   100% { filter: brightness(1); }
 }
 
-/* Ensure image is hidden initially for last 3 cards */
-.last-three-hidden img {
-  visibility: hidden;
+.last-three-hidden {
+  animation: glowPulse 2.5s ease-in-out infinite;
+  cursor: pointer;
 }
 
+/* Hide image for last 3 cards until clicked */
+.last-three-hidden img {
+  visibility: hidden;
 }
