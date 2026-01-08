@@ -148,16 +148,15 @@ function openPack() {
       setTimeout(() => div.classList.add("show"), i * 350);
       packDiv.appendChild(div);
     } else {
-      // Last 3 cards: delay placement, glow appears after first 7
+      // Last 3 cards: add after first 7 cards
       setTimeout(() => {
         packDiv.appendChild(div);
-
-        // Glow starts after first 7 cards
+        // Glow and click-to-reveal appear 1s after first 7
         setTimeout(() => {
           div.classList.add("last-three-hidden"); // start glow
           div.querySelector("img").style.visibility = "hidden";
 
-          void div.offsetWidth; // reflow
+          void div.offsetWidth; // force reflow for animation
 
           div.addEventListener("click", function reveal() {
             div.classList.add("show");
@@ -166,7 +165,7 @@ function openPack() {
             div.removeEventListener("click", reveal);
           });
         }, 1000); // glow delay
-      }, i * 350);
+      }, (pulls.length - 3) * 350); // placement after first 7
     }
   });
 }
