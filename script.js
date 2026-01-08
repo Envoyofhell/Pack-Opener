@@ -140,32 +140,38 @@ packDiv.addEventListener("click", function revealLastThree() {
   packDiv.removeEventListener("click", revealLastThree);
 });
 
-/* ---------- START SCREEN ---------- */
-importSetBtn.onclick=()=>jsonInput.click();
-jsonInput.onchange=(e)=>{
-  const f=jsonInput.files[0];
-  if(!f||!f.name.endsWith(".json")) return alert("Please select a JSON file");
-  const r=new FileReader();
-  r.onload=ev=>{ try{ loadSet(ev.target.result); }catch{alert("Invalid JSON");} };
+/* ---------------- START SCREEN ---------------- */
+availableSetsDiv.innerHTML = "";
+fetch("sets/index.json")
+  .then(res => res.json())
+  .then(list => {
+    list.forEach(file => {
+      const setName = file.replace(".json","");
+      const btn = document.createElement("button");
+      btn.textContent = setName;
+      btn.onclick = () => loadSet(`sets/${file}`);
+      availableSetsDiv.appendChild(btn);
+    });
+  })
+  .catch(err => {
+    console.error("Failed to load sets list:", err);
+    availableSetsDiv.innerHTML = "<p>No sets available</p>";
+  });
+
+/* Import JSON set */
+importSetBtn.onclick = () => jsonInput.click();
+jsonInput.onchange = (e) => {
+  const f = jsonInput.files[0];
+  if (!f || !f.name.endsWith(".json")) return alert("Please select a JSON file");
+  const r = new FileReader();
+  r.onload = ev => { try { loadSet(ev.target.result); } catch { alert("Invalid JSON"); } };
   r.readAsText(f);
 };
 
-/* ---------- NAVIGATION ---------- */
-viewCollectionBtn.onclick=()=>collectionDiv.parentElement.classList.remove("hidden");
-backToStartBtn.onclick=()=>{
-  app.classList.add("hidden");
-  startScreen.classList.remove("hidden");
-};
-
-/* ---------- LOAD AVAILABLE SETS ---------- */
-fetch("sets").then(r=>r.json()).then(list=>{
-  list.forEach(s=>{
-    const btn=document.createElement("button");
-    btn.textContent=s;
-    btn.onclick=()=>loadSet(`sets/${s}`);
-    availableSetsDiv.appendChild(btn);
-  });
-}).catch(()=>{}); // fallback for manual import
+/* ---------------- NAVIGATION ---------------- */
+viewCollectionBtn.onclick = () => collectionDiv.parentElement.classList.remove("hidden");
+backToStartBtn.onclick = () => { app.classList.add("hidden"); startScreen.classList.remove("hidden"); };
+openPackBtn.onclick = openPack;
 
 /* ---------------- INITIAL RENDER ---------------- */
 updateStatsDisplay();
