@@ -127,61 +127,20 @@ progress::-webkit-progress-value {
   border-radius: 8px;
 }
 
-/* ---------------- Pulsing sequential glow for last 3 cards ---------------- */
+/* Pulsing glow animation for last 3 cards */
 @keyframes glowPulse {
-  0% {
-    filter: brightness(0.8);
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
-  }
-  50% {
-    filter: brightness(1.5);
-    box-shadow: 0 0 35px rgba(255, 255, 255, 0.6);
-  }
-  100% {
-    filter: brightness(0.8);
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
-  }
+  0% { filter: brightness(1); box-shadow: 0 0 12px rgba(255,255,255,0.2); }
+  50% { filter: brightness(1.35); box-shadow: 0 0 25px rgba(255,255,255,0.6); }
+  100% { filter: brightness(1); box-shadow: 0 0 12px rgba(255,255,255,0.2); }
 }
 
-/* Last 3 cards container */
 .last-three-hidden {
-  animation: glowPulse 2s ease-in-out infinite;
+  animation: glowPulse 2.5s ease-in-out infinite;
   cursor: pointer;
-  border-radius: 14px;
-  transition: transform 0.3s, box-shadow 0.3s;
-  transform: scale(1);
-  opacity: 0.85; /* slightly dim to start */
+  border-radius: 14px; /* match normal card style */
 }
 
-/* Slight grow on hover */
-.last-three-hidden:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 40px rgba(255, 255, 255, 0.7);
-}
-
-/* Hide the card image until revealed */
+/* Hide image for last 3 cards until clicked */
 .last-three-hidden img {
   visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
-
-/* Reveal image smoothly when clicked */
-.last-three-hidden.show img {
-  visibility: visible;
-  opacity: 1;
-}
-
-/* Stop glow after reveal */
-.last-three-hidden.show {
-  animation: none;
-  box-shadow: 0 0 0 transparent;
-  transform: scale(1);
-  opacity: 1;
-}
-
-/* Optional: extra glow class applied by JS */
-.card.glow {
-  animation: glowPulse 2s ease-in-out infinite;
-  opacity: 1;
 }
