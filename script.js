@@ -57,13 +57,16 @@ function updateStatsDisplay(){
   statsDiv.innerHTML=html;
 
   // ---------- Progress Bar Calculation ----------
+  // Regular set includes Common, Uncommon, Rare, Double Rare
   const regularRarities = ["Common","Uncommon","Rare","Double Rare"];
   const regularMax = cards.filter(c => regularRarities.includes(c.rarity)).length;
   const regularCollected = Object.values(collection).filter(c => c.count > 0 && regularRarities.includes(c.rarity)).length;
 
+  // Master set includes all rarities
   const masterMax = cards.length;
   const masterCollected = Object.values(collection).filter(c => c.count > 0).length;
 
+  // Update the progress bars
   document.getElementById("regularProgress").value = (regularCollected / regularMax) * 100;
   document.getElementById("masterProgress").value = (masterCollected / masterMax) * 100;
 }
@@ -133,19 +136,8 @@ function loadSet(fileOrJSON){
 /* ---------------- HELPERS ---------------- */
 function randomFrom(arr){ if(!arr||!arr.length) return null; return arr[Math.floor(Math.random()*arr.length)]; }
 function getByRarity(r){ return availableRarities[r]||[]; }
-function weightedRoll(table){ 
-  const f=table.filter(e=>getByRarity(e.rarity).length); 
-  if(!f.length) return null; 
-  let total=f.reduce((s,e)=>s+e.weight,0),roll=Math.random()*total; 
-  for(let e of f){ if(roll<e.weight) return e.rarity; roll-=e.weight;} 
-  return f[f.length-1].rarity; 
-}
-function pullWeighted(table){ 
-  const r=weightedRoll(table); 
-  const arr = getByRarity(r); 
-  if(!arr.length) return randomFrom(cards) || { name:"Unknown", number:"0", rarity:"Common", image:"" };
-  return randomFrom(arr); 
-}
+function weightedRoll(table){ const f=table.filter(e=>getByRarity(e.rarity).length); if(!f.length) return null; let total=f.reduce((s,e)=>s+e.weight,0),roll=Math.random()*total; for(let e of f){ if(roll<e.weight) return e.rarity; roll-=e.weight;} return f[f.length-1].rarity; }
+function pullWeighted(table){ const r=weightedRoll(table); return randomFrom(getByRarity(r))||randomFrom(cards); }
 
 /* ---------------- OPEN PACK ---------------- */
 function openPack() {
@@ -153,29 +145,19 @@ function openPack() {
   packDiv.innerHTML = "";
 
   const pulls = [];
+  for (let i = 0; i < 4; i++) pulls.push(randomFrom(getByRarity("Common")) || randomFrom(cards));
+  for (let i = 0; i < 3; i++) pulls.push(randomFrom(getByRarity("Uncommon")) || randomFrom(cards));
+  pulls.push(pullWeighted([{ rarity:"Common", weight:55},{ rarity:"Uncommon", weight:32},{ rarity:"Rare", weight:11},{ rarity:"Illustration Rare", weight:1.5},{ rarity:"Special Illustration Rare", weight:0.4},{ rarity:"Hyper Rare", weight:0.1}]));
+  pulls.push(pullWeighted([{ rarity:"Common", weight:35},{ rarity:"Uncommon", weight:43},{ rarity:"Rare", weight:18},{ rarity:"Illustration Rare", weight:12},{ rarity:"Special Illustration Rare", weight:2.3},{ rarity:"Hyper Rare", weight:0.7}]));
+  pulls.push(pullWeighted([{ rarity:"Rare", weight:11},{ rarity:"Double Rare", weight:3},{ rarity:"Ultra Rare", weight:1}]));
 
-  // Safely pull cards
-  function safeRandom(rarity){
-    const arr = getByRarity(rarity);
-    if(arr.length) return randomFrom(arr);
-    return randomFrom(cards) || { name:"Unknown", number:"0", rarity:"Common", image:"" };
-  }
-
-  for (let i = 0; i < 4; i++) pulls.push(safeRandom("Common"));
-  for (let i = 0; i < 3; i++) pulls.push(safeRandom("Uncommon"));
-  pulls.push(safeRandom(pullWeighted([{ rarity:"Common", weight:55},{ rarity:"Uncommon", weight:32},{ rarity:"Rare", weight:11},{ rarity:"Illustration Rare", weight:1.5},{ rarity:"Special Illustration Rare", weight:0.4},{ rarity:"Hyper Rare", weight:0.1}])));
-  pulls.push(safeRandom(pullWeighted([{ rarity:"Common", weight:35},{ rarity:"Uncommon", weight:43},{ rarity:"Rare", weight:18},{ rarity:"Illustration Rare", weight:12},{ rarity:"Special Illustration Rare", weight:2.3},{ rarity:"Hyper Rare", weight:0.7}])));
-  pulls.push(safeRandom(pullWeighted([{ rarity:"Rare", weight:11},{ rarity:"Double Rare", weight:3},{ rarity:"Ultra Rare", weight:1}])));
-
-  // Update stats safely
   stats.packsOpened++;
   stats.totalCards += pulls.length;
-  pulls.forEach(c => {
-    if(!c) return;
-    stats.rarities[c.rarity] = (stats.rarities[c.rarity] || 0) + 1;
+  pulls.forEach(c => stats.rarities[c.rarity] = (stats.rarities[c.rarity] || 0) + 1);
+  pulls.forEach(c => { 
     const key = `${c.name}_${c.number}`; 
     if (!collection[key]) collection[key] = { ...c, count: 0 }; 
-    collection[key].count++;
+    collection[key].count++; 
   });
 
   saveCollection();
@@ -183,29 +165,35 @@ function openPack() {
   saveStats();
   updateStatsDisplay();
 
-  // Reveal cards
-  const normalCardsCount = pulls.length - 3;
-
-  pulls.forEach((c,i)=>{
+  /* ------- 3 Last Cards -------- */
+  pulls.forEach((c, i) => {
     const div = document.createElement("div");
-    div.className = `card rarity-${c.rarity.replace(/\s+/g,'-')}`;
+    div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
     div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
-    packDiv.appendChild(div);
 
-    const img = div.querySelector("img");
-
-    if(i < normalCardsCount){
-      setTimeout(()=> div.classList.add("show"), i*350);
+    if (i < pulls.length - 3) {
+      // First 7 cards: normal reveal
+      setTimeout(() => div.classList.add("show"), i * 350);
+      packDiv.appendChild(div);
     } else {
-      // last three
-      div.classList.add("last-three-hidden", "glow");
-      img.style.visibility = "hidden";
-      div.addEventListener("click", function reveal(){
-        div.classList.add("show");
-        div.classList.remove("last-three-hidden","glow");
-        img.style.visibility = "visible";
-        div.removeEventListener("click", reveal);
-      });
+      // Last 3 cards: add after first 7 cards
+      setTimeout(() => {
+        packDiv.appendChild(div);
+        // Glow and click-to-reveal appear 1s after first 7
+        setTimeout(() => {
+          div.classList.add("last-three-hidden"); // start glow
+          div.querySelector("img").style.visibility = "hidden";
+
+          void div.offsetWidth; // force reflow for animation
+
+          div.addEventListener("click", function reveal() {
+            div.classList.add("show");
+            div.classList.remove("last-three-hidden");
+            div.querySelector("img").style.visibility = "visible";
+            div.removeEventListener("click", reveal);
+          });
+        }, 1000); // glow delay
+      }, (pulls.length - 3) * 350); // placement after first 7
     }
   });
 }
@@ -219,6 +207,8 @@ function initStartScreen() {
     availableSetsDiv.appendChild(btn);
   });
 }
+
+// Run once on page load
 initStartScreen();
 
 /* ---------------- IMPORT ---------------- */
@@ -231,13 +221,18 @@ jsonInput.onchange=(e)=>{
   r.readAsText(f);
 };
 
+/* URL IMPORT (only if elements exist) */
 if (importSetUrlBtn && setUrlInput && setUrlWrapper) {
   importSetUrlBtn.onclick = async () => {
+
+    // First click: reveal input
     if (setUrlWrapper.style.display === "none") {
       setUrlWrapper.style.display = "block";
       setUrlInput.focus();
       return;
     }
+
+    // Second click: attempt import
     const url = setUrlInput.value.trim();
     if (!url) return alert("Enter a URL");
 
@@ -252,7 +247,9 @@ if (importSetUrlBtn && setUrlInput && setUrlWrapper) {
 }
 
 /* ---------------- COLLECTION FILTER ---------------- */
-collectionFilter.addEventListener("change", ()=>{ renderCollection(collectionFilter.value||null); });
+collectionFilter.addEventListener("change", ()=>{
+  renderCollection(collectionFilter.value||null);
+});
 
 /* ---------------- NAVIGATION ---------------- */
 viewCollectionBtn.onclick=()=>{ openPackPage.classList.add("hidden"); collectionPage.classList.remove("hidden"); };
