@@ -166,37 +166,37 @@ function openPack() {
   updateStatsDisplay();
 
   /* ------- 3 Last Cards -------- */
-  pulls.forEach((c, i) => {
-    const div = document.createElement("div");
-    div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
-    div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
+  /* ------- REVEAL CARDS ------- */
+pulls.forEach((c, i) => {
+  const div = document.createElement("div");
+  div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
+  div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
 
-    if (i < pulls.length - 3) {
-      // First 7 cards: normal reveal
-      setTimeout(() => div.classList.add("show"), i * 350);
-      packDiv.appendChild(div);
-    } else {
-      // Last 3 cards: add after first 7 cards
-      setTimeout(() => {
-        packDiv.appendChild(div);
-        // Glow and click-to-reveal appear 1s after first 7
-        setTimeout(() => {
-          div.classList.add("last-three-hidden"); // start glow
-          div.querySelector("img").style.visibility = "hidden";
+  // First 7 cards: normal reveal
+  if (i < pulls.length - 3) {
+    packDiv.appendChild(div);
+    setTimeout(() => div.classList.add("show"), i * 350);
+    return;
+  }
 
-          void div.offsetWidth; // force reflow for animation
+  // Last 3 cards
+  div.classList.add("last-three-hidden");
+  div.querySelector("img").style.visibility = "hidden";
+  packDiv.appendChild(div);
 
-          div.addEventListener("click", function reveal() {
-            div.classList.add("show");
-            div.classList.remove("last-three-hidden");
-            div.querySelector("img").style.visibility = "visible";
-            div.removeEventListener("click", reveal);
-          });
-        }, 1000); // glow delay
-      }, (pulls.length - 3) * 350); // placement after first 7
-    }
-  });
-}
+  // Reveal after a delay
+  setTimeout(() => {
+    // Glow effect
+    div.classList.add("glow"); // optional CSS class
+    // Make clickable
+    div.addEventListener("click", function reveal() {
+      div.classList.add("show");
+      div.classList.remove("last-three-hidden", "glow");
+      div.querySelector("img").style.visibility = "visible";
+      div.removeEventListener("click", reveal);
+    });
+  }, (i - (pulls.length - 3) + 7) * 350 + 1000); // stagger timing after first 7
+});
 
 /* ---------------- START SCREEN ---------------- */
 function initStartScreen() {
