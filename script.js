@@ -145,6 +145,8 @@ function openPack() {
   packDiv.innerHTML = "";
 
   const pulls = [];
+
+  // Pull cards
   for (let i = 0; i < 4; i++) pulls.push(randomFrom(getByRarity("Common")) || randomFrom(cards));
   for (let i = 0; i < 3; i++) pulls.push(randomFrom(getByRarity("Uncommon")) || randomFrom(cards));
   pulls.push(pullWeighted([{ rarity:"Common", weight:55},{ rarity:"Uncommon", weight:32},{ rarity:"Rare", weight:11},{ rarity:"Illustration Rare", weight:1.5},{ rarity:"Special Illustration Rare", weight:0.4},{ rarity:"Hyper Rare", weight:0.1}]));
@@ -165,38 +167,36 @@ function openPack() {
   saveStats();
   updateStatsDisplay();
 
-  /* ------- 3 Last Cards -------- */
-  /* ------- REVEAL CARDS ------- */
-pulls.forEach((c, i) => {
-  const div = document.createElement("div");
-  div.className = `card rarity-${c.rarity.replace(/\s+/g, '-')}`;
-  div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
+  /* -------- Reveal Cards -------- */
+  pulls.forEach((c, i) => {
+    const div = document.createElement("div");
+    div.className = `card rarity-${c.rarity.replace(/\s+/g,'-')}`;
+    div.innerHTML = `<img src="${c.image}" alt="${c.name}">`;
 
-  // First 7 cards: normal reveal
-  if (i < pulls.length - 3) {
+    // First 7 cards: normal reveal
+    if (i < pulls.length - 3) {
+      packDiv.appendChild(div);
+      setTimeout(() => div.classList.add("show"), i * 350);
+      return;
+    }
+
+    // Last 3 cards: hidden with glow, click to reveal
+    div.classList.add("last-three-hidden");
+    div.querySelector("img").style.visibility = "hidden";
     packDiv.appendChild(div);
-    setTimeout(() => div.classList.add("show"), i * 350);
-    return;
-  }
 
-  // Last 3 cards
-  div.classList.add("last-three-hidden");
-  div.querySelector("img").style.visibility = "hidden";
-  packDiv.appendChild(div);
-
-  // Reveal after a delay
-  setTimeout(() => {
-    // Glow effect
-    div.classList.add("glow"); // optional CSS class
-    // Make clickable
-    div.addEventListener("click", function reveal() {
-      div.classList.add("show");
-      div.classList.remove("last-three-hidden", "glow");
-      div.querySelector("img").style.visibility = "visible";
-      div.removeEventListener("click", reveal);
-    });
-  }, (i - (pulls.length - 3) + 7) * 350 + 1000); // stagger timing after first 7
-});
+    // Stagger glow and click setup
+    setTimeout(() => {
+      div.classList.add("glow"); // optional CSS class for extra shine
+      div.addEventListener("click", function reveal() {
+        div.classList.add("show");
+        div.classList.remove("last-three-hidden", "glow");
+        div.querySelector("img").style.visibility = "visible";
+        div.removeEventListener("click", reveal);
+      });
+    }, (i - (pulls.length - 3) + 7) * 350 + 500); // stagger timing after first 7
+  });
+}
 
 /* ---------------- START SCREEN ---------------- */
 function initStartScreen() {
